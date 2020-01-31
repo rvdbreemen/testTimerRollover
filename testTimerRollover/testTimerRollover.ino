@@ -15,7 +15,7 @@ static uint8_t myTimer = 0;
 #include "timers.h"
 
   DECLARE_TIMERms(waiting, 50)        // update myTimer every 50 ms
-  DECLARE_LOWTIMER(printTheText, 15)  // print text every 15 myTimer's
+  DECLARE_8BITTIMER(printTheText, 15)  // print text every 15 myTimer's
 
 void printText()
 {
@@ -34,7 +34,7 @@ void loop() {
     myTimer++;
     Serial.print(".");
   }      
-  if ( DUE_LOW(printTheText) ) {
+  if ( DUE_8BIT(printTheText) ) {
       printText();
   }
 
