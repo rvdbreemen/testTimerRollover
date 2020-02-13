@@ -10,26 +10,28 @@
  * in your program.
  */
 
-#define MS_TICKS      100       // update timer8Bit() every 100ms
-#define TEST_INTERVAL  30       // set 8bit timer to nr of ticks
+#define MS_TICKS       100       // update timer8Bit() every 100ms
+#define DUE_TEST        30       // set 8bit timer to nr of ticks
+#define INTERVAL_TEST   25       // set 8bit timer to nr of ticks
 
 #include "safeTimers.h"
 
-  DECLARE_TIMERms(everyMsTick, MS_TICKS)        // update myTimer every msTick
-  DECLARE_8BIT_TIMER(test8Bit, TEST_INTERVAL)   // print text every INTERVAL timer8Bit() 
+  DECLARE_TIMERms(everyMsTick, MS_TICKS)                // update myTimer every msTick
+  DECLARE_8BIT_TIMER(test8BitDue, DUE_TEST)             // print text every INTERVAL timer8Bit() 
+  DECLARE_8BIT_TIMER(test8BitInterval, INTERVAL_TEST)   // print text every INTERVAL timer8Bit() 
 
   DECLARE_TIMERs(wait3Sec, 3)                   // delay 3 seconds
-  DECLARE_TIMERs(doDelay, 10)                   // every 10 seconds 
+  DECLARE_TIMERs(doDelay, 13)                   // every 10 seconds 
 
 //================================================================================================
-void print8BitText()
+void print8BitDue()
 {
   static uint32_t lastPrint = millis();
   int duration = millis() - lastPrint;
   
-  if (duration > (TEST_INTERVAL * MS_TICKS))
+  if (duration > (DUE_TEST * MS_TICKS))
   {
-    Serial.printf("\r\n[%4d]ticks [%02d:%02d:%03d] timer8Bit()[%4u]/[%4d] => DUE_8BIT() TOOK TO LONG!!!\r\n"
+    Serial.printf("\r\n[%4d]ticks [%02d:%02d:%03d]            timer8Bit()[%4u]/[%4d] => DUE_8BIT()          TOOK TO LONG!!!\r\n"
                                                            , ((millis() - lastPrint) / MS_TICKS)
                                                            , ((millis() / (60 * 1000)) % 60)
                                                            , ((millis() / 1000) % 60)
@@ -39,7 +41,7 @@ void print8BitText()
   }
   else
   {
-    Serial.printf("[%4d]ticks [%02d:%02d:%03d]  DUE_8BIT() fired!\r\n"
+    Serial.printf("[%4d]ticks [%02d:%02d:%03d]            DUE_8BIT()          fired!\r\n"
                                                            , ((millis() - lastPrint) / MS_TICKS)
                                                            , ((millis() / (60 * 1000)) % 60)
                                                            , ((millis() / 1000) % 60)
@@ -48,7 +50,37 @@ void print8BitText()
   }
   lastPrint = millis();
   
-} // print8BitText()
+} // print8BitDue()
+
+
+//================================================================================================
+void print8BitInterval()
+{
+  static uint32_t lastPrint = millis();
+  int duration = millis() - lastPrint;
+  
+  if (duration > (INTERVAL_TEST * MS_TICKS))
+  {
+    Serial.printf("\r\n[%4d]ticks            [%02d:%02d:%03d] timer8Bit()[%4u]/[%4d] => DUE_8BIT_INTERVAL() TOOK TO LONG!!!\r\n"
+                                                           , ((millis() - lastPrint) / MS_TICKS)
+                                                           , ((millis() / (60 * 1000)) % 60)
+                                                           , ((millis() / 1000) % 60)
+                                                           , (millis() % 1000)
+                                                           , timer8Bit()
+                                                           , (int8_t)timer8Bit());
+  }
+  else
+  {
+    Serial.printf("[%4d]ticks            [%02d:%02d:%03d] DUE_8BIT_INTERVAL() fired!\r\n"
+                                                           , ((millis() - lastPrint) / MS_TICKS)
+                                                           , ((millis() / (60 * 1000)) % 60)
+                                                           , ((millis() / 1000) % 60)
+                                                           , (millis() % 1000));
+    
+  }
+  lastPrint = millis();
+  
+} // print8BitInterval()
 
 
 //================================================================================================
@@ -57,7 +89,7 @@ void update8BitTimer(char x)
   if ( DUE(everyMsTick))
   {
     myTimer++;
-    Serial.print(x);
+    if (x != ' ') Serial.print(x);
   }      
   yield();
   
@@ -68,19 +100,24 @@ void update8BitTimer(char x)
 void setup() {
   Serial.begin(115200);
   Serial.println("\n.. and then it begins ...\r\n");
-  Serial.printf("\nInterval [%d]ticks\r\n", TEST_INTERVAL);
+  Serial.printf("\nDue_Test[%d]ticks, Interval_Test [%d]ticks\r\n", DUE_TEST, INTERVAL_TEST);
 
-  RESTART_8BIT_TIMER(test8Bit);
+  RESTART_8BIT_TIMER(test8BitDue);
+  RESTART_8BIT_TIMER(test8BitInterval);
   
 } // setup()
 
 
 //================================================================================================
 void loop() {
-  update8BitTimer('.');   
+  update8BitTimer(' ');   
   
-  if ( DUE_8BIT(test8Bit) ) {
-      print8BitText();
+  if ( DUE_8BIT(test8BitDue) ) {
+      print8BitDue();
+  }
+  
+  if ( DUE_8BIT_INTERVAL(test8BitInterval) ) {
+      print8BitInterval();
   }
 
   if ( DUE(doDelay) )

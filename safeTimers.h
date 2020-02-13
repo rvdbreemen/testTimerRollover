@@ -16,6 +16,16 @@
  *  returns false (0) if interval hasn't elapsed since last DUE-time
  *          true (current millis) if it has
  *  updates <timername>_last
+ *    
+ * DUE_INTERVAL(timername) 
+ *  With this macro the time between two tests is always less or equal to interval
+ *  Once started at x:35 with an interval of 1 minute it will fire at n:35 every time.
+ *  If the time between two successive DUE_INTERVAL() calls is longer then
+ *  the interval it will catch up until it is at n:35 again. 
+ *  
+ *  returns false (0) if interval hasn't elapsed since last DUE_INTERVAL-time
+ *          true (current millis) if it has
+ *  updates <timername>_last
  *  
  *  RESTART_TIMER(timername)
  *   it restarts the timer
@@ -55,8 +65,11 @@
 
 #define RESTART_TIMER(timerName)                { timerName##_last = millis(); }
 
-#define SINCE(timerName)  ((signed long)(millis() - timerName##_last))
-#define DUE(timerName) (( SINCE(timerName) < timerName##_interval) ? 0 : (timerName##_last=millis()))
+#define SINCE(timerName)        ((signed long)(millis() - timerName##_last))
+#define DUE(timerName)          (( SINCE(timerName) < timerName##_interval) \
+                                              ? 0 : (timerName##_last=millis()))
+#define DUE_INTERVAL(timerName) (( SINCE(timerName) < timerName##_interval) \
+                                              ? 0 : (timerName##_last=timerName##_last+timerName##_interval))
 
 //-------------------------------------------------------------------------------------
 //--- to test the roll-over in a reasanable time frame I defined the same functions ---
@@ -71,7 +84,6 @@ uint8_t timer8Bit()
   
 } // timer8Bit()
 
-
 #define DECLARE_8BIT_TIMER(timerName, timerTime)    static uint8_t timerName##_interval = timerTime,  \
                                                     timerName##_last = timer8Bit();
 
@@ -80,6 +92,8 @@ uint8_t timer8Bit()
 #define SINCE_8BIT(timerName)                       ((int8_t)(timer8Bit() - timerName##_last))
 #define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval)   \
                                                         ? 0 : (timerName##_last=timer8Bit()))
+#define DUE_8BIT_INTERVAL(timerName)                ((SINCE_8BIT(timerName) < timerName##_interval)   \
+                                                        ? 0 : (timerName##_last+=timerName##_interval))
 
 /* 
 **      
