@@ -60,8 +60,13 @@
                                                 timerName##_last = millis();
 #define DECLARE_TIMERms(timerName, timerTime)   static unsigned long timerName##_interval = timerTime,                 \
                                                 timerName##_last = millis();
-
 #define DECLARE_TIMERs DECLARE_TIMER
+
+
+#define TIME_LEFT_MIN(timerName)                  (uint32_t)((timerName##_interval + timerName##_last - millis()) / 60 / 1000)
+#define TIME_LEFT_SEC(timerName)                  (uint32_t)((timerName##_interval + timerName##_last - millis())/ 1000)
+#define TIME_LEFT_MS(timerName)                   (uint32_t)( timerName##_interval + timerName##_last - millis())
+#define TIME_LEFT TIMER_LEFT_SEC
 
 #define RESTART_TIMER(timerName)                { timerName##_last = millis(); }
 
