@@ -1,4 +1,4 @@
-# millis_RollOver
+# testTimerRollOver
 This program is to test the millis() rollover in just a few seconds ...
 
 There is an ongoing discussion on the internat about the problems due to 
