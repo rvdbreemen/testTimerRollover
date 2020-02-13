@@ -40,9 +40,19 @@
 #define SINCE(timerName)  ((signed long)(millis() - timerName##_last))
 #define DUE(timerName) (( SINCE(timerName) < timerName##_interval) ? 0 : (timerName##_last=millis()))
 
+//-------------------------------------------------------------------------------------
 //--- to test the roll-over in a reasanable time frame I defined the same functions ---
 //--- but with a 8 bit unsigned integer                                             ---
 //-------------------------------------------------------------------------------------
-#define DECLARE_8BIT_TIMER(timerName, timerTime)    static uint8_t timerName##_interval = timerTime,      timerName##_last = myTimer+random(timerName##_interval);
-#define SINCE_8BIT(timerName)                       ((int8_t)(myTimer - timerName##_last))
-#define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval) ? 0 : (timerName##_last=myTimer))
+static uint8 myTimer;
+
+uint8_t timer8Bit()
+{
+  return myTimer;
+} // timer8Bit()
+
+#define DECLARE_8BIT_TIMER(timerName, timerTime)    static uint8_t timerName##_interval = timerTime,     \
+                                                    timerName##_last = timer8Bit()+random(timerName##_interval);
+#define SINCE_8BIT(timerName)                       ((int8_t)(timer8Bit() - timerName##_last))
+#define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval) ?    \
+                                                                          0 : (timerName##_last=timer8Bit()))
