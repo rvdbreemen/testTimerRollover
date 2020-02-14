@@ -26,6 +26,8 @@ uint32_t  loopCount = 0;
   DECLARE_TIMER_MS(wait3Sec, 3123)                  // delay 3+ seconds
   DECLARE_TIMER_SEC(doDelay, 17)                    // every 17 seconds 
 
+  DECLARE_TIMER_SEC(hold15Secs, 15)
+
 //================================================================================================
 void print8BitTest1()
 {
@@ -168,11 +170,17 @@ void loop() {
     Serial.printf("Test1: Ticks left [%3d]\r\n", TIME_LEFT_8BIT(test8BitTest1));
     Serial.printf("Test2: Ticks left [%3d]\r\n", TIME_LEFT_8BIT(test8BitTest2));
   }
-  
-  if (loopCount > 400)  // 40.000 ms => 40 sec
+
+  if (loopCount > 600)  // 60.000 ms => 60 sec
   {
-    Serial.print("hold ..");
-    delay(15000);
+    //--- test what happens if something keeps the system hold15Secs ---
+    Serial.print("hold for 15 seconds ..");
+    RESTART_TIMER(hold15Secs);
+    while ( !DUE(hold15Secs) )
+    {
+      update8BitTimer('.');
+      yield();
+    }
     Serial.println(".. continue!");
     loopCount = 0;
     Serial.printf("doDelay: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(doDelay)

@@ -76,17 +76,17 @@
 
 uint32_t __DUE_SKIP(uint32_t &sLast, uint32_t sInterval, uint32_t sTimer)
 { 
+  bool bPrint = true;
   while ( (int32_t)(sTimer - sLast) > (int32_t)sInterval )
   {
-    //Serial.printf("sTimer[%d] - sLast[%d] => [%d] > sInterval[%d]\r\n", sTimer, sLast, (int32_t)(sTimer - sLast), (int32_t)sInterval);
+    if (bPrint) Serial.println("32Bit>> last+=interval");
     sLast += sInterval;
+    bPrint = false;
     yield();
   }
   if ((int32_t)(sTimer - sLast) > sInterval)
         return  0;
-  else  sLast += sInterval;
-
-  return sLast;
+  else  return (sLast += sInterval);
   
 } // _DUE_SKIP()
 
@@ -120,11 +120,13 @@ uint8_t __DUE_SKIP_8BIT(uint8_t &last, uint8_t interval, uint8_t timer)
 {
   if (timer > last)
   {
+    bool bPrint = true;
     //Serial.printf("[a](timer[%4d] - last[%4d]) => [%4d] > interval[%d]", timer, last, ((int16_t)(timer - last)), ((int8_t)interval));
     while ( (timer - last) > interval) 
     {
-      Serial.println(" last+=interval");
+      if (bPrint) Serial.println("8Bit>> last+=interval");
       last += interval;
+      bPrint = false;
       yield();
     }
     //Serial.println();
@@ -132,12 +134,9 @@ uint8_t __DUE_SKIP_8BIT(uint8_t &last, uint8_t interval, uint8_t timer)
   
   //Serial.printf("[b](timer[%4d] - last[%4d]) => [%4d] < interval[%d]\r\n", timer, last, ((timer - last)), (interval));
   if ((int8_t)(timer - last) < (int8_t)interval)
-  {
-    //Serial.printf("[b](timer[%4d] - last[%4d]) => [%4d] < interval[%d]\r\n", timer, last, ((int16_t)(timer - last)), ((int8_t)interval));
-    return 0;
-  }
+        return 0;
+  else  return (last += interval);
 
-  return (last += interval);
 }
 /* 
 **      
