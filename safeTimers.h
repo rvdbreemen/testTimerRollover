@@ -71,10 +71,10 @@
 #define RESTART_TIMER(timerName)                { timerName##_last = millis(); }
 
 #define SINCE(timerName)        ((signed long)(millis() - timerName##_last))
+#define PAST(timerName)          (( SINCE(timerName) < timerName##_interval) \
+                                              ? 0 : (timerName##_last = millis()))
 #define DUE(timerName)          (( SINCE(timerName) < timerName##_interval) \
-                                              ? 0 : (timerName##_last=millis()))
-#define DUE_INTERVAL(timerName) (( SINCE(timerName) < timerName##_interval) \
-                                              ? 0 : (timerName##_last=timerName##_last+timerName##_interval))
+                                              ? 0 : (timerName##_last += timerName##_interval))
 
 //-------------------------------------------------------------------------------------
 //--- to test the roll-over in a reasanable time frame I defined the same functions ---
@@ -95,9 +95,9 @@ uint8_t timer8Bit()
 #define RESTART_8BIT_TIMER(timerName)               { timerName##_last = timer8Bit(); }
 
 #define SINCE_8BIT(timerName)                       ((int8_t)(timer8Bit() - timerName##_last))
-#define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval)   \
+#define PAST_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval)   \
                                                         ? 0 : (timerName##_last=timer8Bit()))
-#define DUE_8BIT_INTERVAL(timerName)                ((SINCE_8BIT(timerName) < timerName##_interval)   \
+#define DUE_8BIT(timerName)                          ((SINCE_8BIT(timerName) < timerName##_interval)   \
                                                         ? 0 : (timerName##_last+=timerName##_interval))
 
 /* 
