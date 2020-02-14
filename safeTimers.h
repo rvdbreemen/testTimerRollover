@@ -5,12 +5,12 @@
  * by Edgar Bonet
  * 
  * DECLARE_TIMER(timername, interval)
- *  Declares two unsigned longs: 
+ *  Declares two uint32_ts: 
  *    <timername>_last for last execution
  *    <timername>_interval for interval in seconds
  *    
  *    
- * DECLARE_TIMERms is same as DECLARE_TIMER **but** uses milliseconds!
+ * DECLARE_TIMER_MS is same as DECLARE_TIMER **but** uses milliseconds!
  *    
  * DUE(timername) 
  *  returns false (0) if interval hasn't elapsed since last DUE-time
@@ -54,22 +54,26 @@
  *  Be awair in some rare situations the timer's take twice as long as antisipated!
  *  
  */
-#define DECLARE_TIMERm(timerName, timerTime)    static unsigned long timerName##_interval = timerTime * 60 * 1000,     \
-                                                timerName##_last = millis();
-#define DECLARE_TIMER(timerName, timerTime)     static unsigned long timerName##_interval = timerTime * 1000,          \
-                                                timerName##_last = millis();
-#define DECLARE_TIMERms(timerName, timerTime)   static unsigned long timerName##_interval = timerTime,                 \
-                                                timerName##_last = millis();
+#define DECLARE_TIMER_MIN(timerName, timerTime) static uint32_t timerName##_interval = timerTime * 60 * 1000,     \
+                                                timerName##_last = millis()+random(timerName##_interval,(timerName##_interval*1.5));
+#define DECLARE_TIMER_SEC(timerName, timerTime) static uint32_t timerName##_interval = timerTime * 1000,          \
+                                                timerName##_last = millis()+random(timerName##_interval,(timerName##_interval*1.5));
+#define DECLARE_TIMER_MS(timerName, timerTime)  static uint32_t timerName##_interval = timerTime,                 \
+                                                timerName##_last = millis()+random(timerName##_interval,(timerName##_interval*1.5));
 
-#define DECLARE_TIMERs DECLARE_TIMER
+#define DECLARE_TIMER   DECLARE_TIMER_SEC
 
-#define RESTART_TIMER(timerName)                { timerName##_last = millis(); }
+#define TIME_LEFT_MIN(timerName)                 (uint32_t)((timerName##_last - millis() ) / (60*1000))
+#define TIME_LEFT_SEC(timerName)                 (uint32_t)((timerName##_last - millis() ) / 1000)
+#define TIME_LEFT_MS(timerName)                  (uint32_t)( timerName##_last - millis() )
+#define TIME_LEFT     TIMER_LEFT_SEC
 
-#define SINCE(timerName)        ((signed long)(millis() - timerName##_last))
-#define DUE(timerName)          (( SINCE(timerName) < timerName##_interval) \
-                                              ? 0 : (timerName##_last=millis()))
-#define DUE_INTERVAL(timerName) (( SINCE(timerName) < timerName##_interval) \
-                                              ? 0 : (timerName##_last=timerName##_last+timerName##_interval))
+#define RESTART_TIMER(timerName)                { timerName##_last = millis()+timerName##_interval; }
+
+#define SINCE(timerName)                        ((int32_t)(millis() - timerName##_last))
+
+#define DUE(timerName)                          (( SINCE(timerName) > timerName##_interval) \
+                                                       ? 0 : (timerName##_last+=timerName##_interval))
 
 //-------------------------------------------------------------------------------------
 //--- to test the roll-over in a reasanable time frame I defined the same functions ---
@@ -85,14 +89,15 @@ uint8_t timer8Bit()
 } // timer8Bit()
 
 #define DECLARE_8BIT_TIMER(timerName, timerTime)    static uint8_t timerName##_interval = timerTime,  \
-                                                    timerName##_last = timer8Bit();
+                                                    timerName##_last = timer8Bit()+random(timerName##_interval,(timerName##_interval*1.5));
 
-#define RESTART_8BIT_TIMER(timerName)               { timerName##_last = timer8Bit(); }
+#define RESTART_8BIT_TIMER(timerName)               { timerName##_last = timer8Bit()+timerName##_interval; }
 
 #define SINCE_8BIT(timerName)                       ((int8_t)(timer8Bit() - timerName##_last))
-#define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) < timerName##_interval)   \
-                                                        ? 0 : (timerName##_last=timer8Bit()))
-#define DUE_8BIT_INTERVAL(timerName)                ((SINCE_8BIT(timerName) < timerName##_interval)   \
+
+#define TIME_LEFT_8BIT(timerName)                   ((uint8_t)((timerName##_last - timer8Bit()) - INT8_MAX))
+
+#define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) > timerName##_interval)   \
                                                         ? 0 : (timerName##_last+=timerName##_interval))
 
 /* 
