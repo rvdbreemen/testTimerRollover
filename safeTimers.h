@@ -68,12 +68,27 @@
 #define TIME_LEFT_MS(timerName)                  (uint32_t)( timerName##_last - millis() )
 #define TIME_LEFT     TIMER_LEFT_SEC
 
-#define RESTART_TIMER(timerName)                { timerName##_last = millis()+timerName##_interval; }
+#define RESTART_TIMER(timerName)                 { timerName##_last = millis()+timerName##_interval; }
 
-#define SINCE(timerName)                        ((int32_t)(millis() - timerName##_last))
+#define SINCE(timerName)                         ((int32_t)(millis() - timerName##_last))
 
-#define DUE(timerName)                          (( SINCE(timerName) > timerName##_interval) \
-                                                       ? 0 : (timerName##_last+=timerName##_interval))
+#define DUE(timerName)                           (__DUE_SKIP(timerName##_last, timerName##_interval, millis()) )
+
+uint32_t __DUE_SKIP(uint32_t &sLast, uint32_t sInterval, uint32_t sTimer)
+{ 
+  while ( (int32_t)(sTimer - sLast) > (int32_t)sInterval )
+  {
+    //Serial.printf("sTimer[%d] - sLast[%d] => [%d] > sInterval[%d]\r\n", sTimer, sLast, (int32_t)(sTimer - sLast), (int32_t)sInterval);
+    sLast += sInterval;
+    yield();
+  }
+  if ((int32_t)(sTimer - sLast) > sInterval)
+        return  0;
+  else  sLast += sInterval;
+
+  return sLast;
+  
+} // _DUE_SKIP()
 
 //-------------------------------------------------------------------------------------
 //--- to test the roll-over in a reasanable time frame I defined the same functions ---
@@ -99,7 +114,31 @@ uint8_t timer8Bit()
 
 #define DUE_8BIT(timerName)                         ((SINCE_8BIT(timerName) > timerName##_interval)   \
                                                         ? 0 : (timerName##_last+=timerName##_interval))
+#define DUE_SKIP_8BIT(timerName)                    (__DUE_SKIP_8BIT(timerName##_last, timerName##_interval, timer8Bit()) )
 
+uint8_t __DUE_SKIP_8BIT(uint8_t &last, uint8_t interval, uint8_t timer)
+{
+  if (timer > last)
+  {
+    //Serial.printf("[a](timer[%4d] - last[%4d]) => [%4d] > interval[%d]", timer, last, ((int16_t)(timer - last)), ((int8_t)interval));
+    while ( (timer - last) > interval) 
+    {
+      Serial.println(" last+=interval");
+      last += interval;
+      yield();
+    }
+    //Serial.println();
+  }
+  
+  //Serial.printf("[b](timer[%4d] - last[%4d]) => [%4d] < interval[%d]\r\n", timer, last, ((timer - last)), (interval));
+  if ((int8_t)(timer - last) < (int8_t)interval)
+  {
+    //Serial.printf("[b](timer[%4d] - last[%4d]) => [%4d] < interval[%d]\r\n", timer, last, ((int16_t)(timer - last)), ((int8_t)interval));
+    return 0;
+  }
+
+  return (last += interval);
+}
 /* 
 **      
 ** eof 

@@ -12,10 +12,12 @@
  */
 
 #define MS_TICKS       100       // update timer8Bit() every 100ms
-#define DUE_TEST1       15       // set 8bit timer to nr of ticks
+#define DUE_TEST1       20       // set 8bit timer to nr of ticks
 #define DUE_TEST2       60       // set 8bit timer to nr of ticks
 
 #include "safeTimers.h"
+
+uint32_t  loopCount = 0;
 
   DECLARE_TIMER_MS(everyMsTick, MS_TICKS)           // update myTimer every msTick
   DECLARE_8BIT_TIMER(test8BitTest1, DUE_TEST1)      // print text every INTERVAL timer8Bit() ticks
@@ -99,6 +101,7 @@ void update8BitTimer(char x)
 {
   if ( DUE(everyMsTick))
   {
+    loopCount++;
     myTimer++;
     if (x != ' ') Serial.print(x);
     /**
@@ -135,17 +138,19 @@ void setup() {
 void loop() {
   update8BitTimer(' ');   
 
-
-  if ( DUE_8BIT(test8BitTest1) ) {
+  if ( DUE_SKIP_8BIT(test8BitTest1) ) {
     print8BitTest1();
   }
   
-  if ( DUE_8BIT(test8BitTest2) ) {
+  if ( DUE_SKIP_8BIT(test8BitTest2) ) {
       print8BitTest2();
   }
 
-  if ( DUE(doDelay) )
+  if ( DUE(doDelay) && 1)
   {
+    Serial.printf("doDelay: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(doDelay)
+                                                            , TIME_LEFT_MS(doDelay)
+                                                            , TIME_LEFT_MIN(doDelay));
     //Serial.print("wait");
     RESTART_TIMER(wait3Sec);
     Serial.printf("wait3Sec:    Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(wait3Sec)
@@ -162,6 +167,18 @@ void loop() {
 
     Serial.printf("Test1: Ticks left [%3d]\r\n", TIME_LEFT_8BIT(test8BitTest1));
     Serial.printf("Test2: Ticks left [%3d]\r\n", TIME_LEFT_8BIT(test8BitTest2));
+  }
+  
+  if (loopCount > 400)  // 40.000 ms => 40 sec
+  {
+    Serial.print("hold ..");
+    delay(15000);
+    Serial.println(".. continue!");
+    loopCount = 0;
+    Serial.printf("doDelay: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(doDelay)
+                                                            , TIME_LEFT_MS(doDelay)
+                                                            , TIME_LEFT_MIN(doDelay));
+
   }
 
 } // loop()
