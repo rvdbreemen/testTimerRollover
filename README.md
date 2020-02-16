@@ -25,5 +25,5 @@ If you want to use the `safeTimers.h` file in your own sketches, just remove the
 
 The timer-rollover problem is explained by `Edgar Bonet` on `StackExchange`.
 
-You can find that [here](https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover).
+You can find it [here](https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover).
 
