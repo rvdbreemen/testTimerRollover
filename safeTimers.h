@@ -1,35 +1,30 @@
 /*
- * safeTimers.h is developed by Erik
+ * safeTimers.h is initially created by Erik as timers.h
  * 
- * I made some small changes due to the "how can I handle the micros() rollover"
+ * I made some changes due to the "how can I handle the micros() rollover"
  * by Edgar Bonet
  * 
  * DECLARE_TIMER(timername, interval)
- *  Declares two unsigned long var's: 
- *    <timername>_last for last execution
+ *  Declares four uint32_t var's: 
+ *    <timername>_next for next execution
+ *    <timername>_prev holds the previous execution time
  *    <timername>_interval for interval in seconds
+ *    <timername>_refTime holds the timer value of the last DUE()
  *    
  *    
  * DECLARE_TIMER_MS is same as DECLARE_TIMER **but** uses microseconds!
+ * DECLARE_TIMER_MIN is same as DECLARE_TIMER **but** uses minutes!
  *    
  * DUE(timername) 
- *  returns false (0) if interval hasn't elapsed since last DUE-time
+ *  returns false (0) if interval hasn't elapsed since previous DUE-time
  *          true (current micros) if it has
- *  updates <timername>_last
+ *  updates <timername>_next
+ *  updates <timername>_prev
+ *  updates <timername>_refTime
  *    
- * DUE_INTERVAL(timername) 
- *  With this macro the time between two tests is always less or equal to interval
- *  Once started at x:35 with an interval of 1 minute it will fire at n:35 every time.
- *  If the time between two successive DUE_INTERVAL() calls is longer then
- *  the interval it will catch up until it is at n:35 again. 
- *  
- *  returns false (0) if interval hasn't elapsed since last DUE_INTERVAL-time
- *          true (current micros) if it has
- *  updates <timername>_last
- *  
  *  RESTART_TIMER(timername)
  *   it restarts the timer
- *   updates <timername>_last
+ *   updates <timername>_next
  *  
  *  Usage example:
  *  
@@ -51,57 +46,108 @@
  *  
  *  https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-micros-rollover
  *  
- *  Be awair in some rare situations the timer's take twice as long as antisipated!
- *  
  */
-#define DECLARE_TIMER_MIN(timerName, timerTime) static unsigned long timerName##_interval = timerTime * 60 * 1000 * 1000,     \
-                                                timerName##_last = micros()+random(timerName##_interval,(timerName##_interval*1.5));
-#define DECLARE_TIMER_SEC(timerName, timerTime) static unsigned long timerName##_interval = timerTime * 1000 * 1000,          \
-                                                timerName##_last = micros()+random(timerName##_interval,(timerName##_interval*1.5));
-#define DECLARE_TIMER_MS(timerName, timerTime)  static unsigned long timerName##_interval = timerTime * 1000,                 \
-                                                timerName##_last = micros()+random(timerName##_interval,(timerName##_interval*1.5));
+ 
+#define DECLARE_TIMER_MIN(timerName, timerTime) static uint32_t timerName##_interval = timerTime * 60 * 1000 * 1000,          \
+                                                timerName##_next = micros()+random(timerName##_interval,(timerName##_interval*1.5)),\
+                                                timerName##_prev = micros(),                                                \
+                                                timerName##_refTime = micros();
+#define DECLARE_TIMER_SEC(timerName, timerTime) static uint32_t timerName##_interval = timerTime * 1000 * 1000,                \
+                                                timerName##_next = micros()+random(timerName##_interval,(timerName##_interval*1.5)),\
+                                                timerName##_prev = micros(),                                                \
+                                                timerName##_refTime = micros();
+#define DECLARE_TIMER_MS(timerName, timerTime)  static uint32_t timerName##_interval = timerTime * 1000,                       \
+                                                timerName##_next = micros()+random(timerName##_interval,(timerName##_interval*1.5)),\ 
+                                                timerName##_prev = micros(),                                                \
+                                                timerName##_refTime = micros();
 
 #define DECLARE_TIMER   DECLARE_TIMER_SEC
 
-#define TIME_LEFT_MIN(timerName)                 (__TIME_LEFT(timerName##_last, micros(), 60000) )
-#define TIME_LEFT_SEC(timerName)                 (__TIME_LEFT(timerName##_last, micros(),  1000) )
-#define TIME_LEFT_MS(timerName)                  (__TIME_LEFT(timerName##_last, micros(),     1) )
+#define TIME_LEFT_MIN(timerName)                (__TIME_LEFT(timerName##_next, micros(), 60000) )
+#define TIME_LEFT_SEC(timerName)                (__TIME_LEFT(timerName##_next, micros(),  1000) )
+#define TIME_LEFT_MS(timerName)                 (__TIME_LEFT(timerName##_next, micros(),     1) )
 #define TIME_LEFT     TIMER_LEFT_SEC
 
-#define RESTART_TIMER(timerName)                 { timerName##_last = micros()+timerName##_interval; }
+#define RESTART_TIMER(timerName)                { timerName##_next = micros()+timerName##_interval; }
 
-#define SINCE(timerName)                         ((signed long)(micros() - timerName##_last))
+#define DUE(timerName)                          (__DUE__(timerName##_next, timerName##_prev, \
+                                                         timerName##_interval, timerName##_refTime) )
 
-#define DUE(timerName)                           (__DUE__(timerName##_last, timerName##_interval) )
-
-unsigned long __DUE__(unsigned long &sLast, unsigned long sInterval)
-{ 
-  if (micros() > sLast) // overdue ...?
+uint32_t __DUE__(uint32_t &next, uint32_t &prev, uint32_t interval, uint32_t &refTime)
+{
+  //  0<(t)--------------------------------(r)--(n)->MAX
+  //  refTime > timer so a rollover has occured
+  //  we now need to advance the 'next' until it also
+  //  roll's over
+  if (refTime > micros()) // rollover on timer occurd
   {
-    bool bPrint = true;
-    while ( (micros() - sLast) > sInterval )  // long overdue!
+    Serial.printf("32Bit: [%u] rollover [%u].. next[%u] ", refTime, micros(), next);
+    //  0<----------------------------(ni)------(n)->MAX
+    //  we have to advance (next+interval) until it is > next
+    while(next > (next+interval)) // add interval to next until it also roll's over
     {
-      //if (bPrint) Serial.printf("32Bit[%d] last[%d] >> last+=%d\r\n", micros(), sLast, sInterval);
-      sLast += (sInterval +20); // micro's go sooo fast!
-      bPrint = false;
+      next += interval;
+      Serial.print("+");
+    }
+    Serial.printf(" .. next[%u]\r\n", next);
+    //  0<-(n)(n+i)--------------------------------->MAX
+  }
+  
+  //  0<--(n)---------------------------------(p)->MAX
+  //  prev > next so a rollover of next has occured
+  //  we now need to advance time (wast) until the
+  //  timer also roll's over
+  if (prev > next) // rollover on next occurd
+  {
+    Serial.printf("32Bit: prev[%u] rollover next[%u] \r\n", prev, next);
+    //--- now we need to wait for the timer to also rollover!
+    Serial.printf("32Bit: wast some time: timer[%u][%d] ..", micros(), (micros()>>31));
+    //  0<--------------------------------------(t)->MAX
+    while((micros()>>31)) //--- wait for timer to rollover
+    {
+      //--- do some background tasks in here (to be implemented)
+      //Serial.print("t");
+      delay(10);
       yield();
     }
-    //if (!bPrint) Serial.printf("32Bit[%d] > last[%d] ==> [%d]ms to go\r\n", micros(), sLast, ((micros() - sLast) / 1000));
+    Serial.printf(" .. new timer[%u]\r\n", micros());
+    //  0(t)---------------------------------------MAX
   }
 
-  if (micros() >= sLast)
+  //  now what if next > (timer + interval)??
+  //  0<-------------(ti)------(n)---------------->MAX
+  //  we obviously missed some next events and now we
+  //  have to catch-up
+  if (next > (micros() + interval))
   {
-    //Serial.printf("32Bit timer[%d] - last[%d] => [%d] < interval[%d]?\r\n", micros(), sLast, (micros() - sLast), sInterval);
-    if ((micros() - sLast) > sInterval)
-          return  0;
-    else  return (sLast += sInterval);
+    Serial.printf("32Bit: catch-up: next > (timer+interval) => [%u] > [%u] ..", next, (micros()+interval));
+    while (next > (micros()+interval) )
+    {
+      next+=interval;
+      yield();
+    }
+    Serial.printf(".. timer[%u] next[%u]\r\n", micros(), next);
   }
-  //--- not yet due!
-  return 0;
-  
-} // __DUE__()
+  //  0<-------------------------(t)(n)---------->MAX
 
-unsigned long __TIME_LEFT(unsigned long sLast, unsigned long sTimer, unsigned long divider)
+
+  prev  = next;
+  if (micros() > next)  // timer is overdue
+  {
+    next   += interval;
+    if ((next - micros()) < 1)  // if time left
+    {
+      next += interval; // make sure next > micros()!!!
+    }
+    refTime = micros();
+    return next;  // set new next
+  }
+  refTime = micros();
+  return 0;
+}
+
+
+uint32_t __TIME_LEFT(uint32_t sLast, uint32_t sTimer, uint32_t divider)
 {
   if (sLast > sTimer) return ((sLast - sTimer) / (divider * 1000));
   return 0;
@@ -120,46 +166,95 @@ uint16_t timer16Bit()
   
 } // timer16Bit()
 
-#define DECLARE_16Bit_TIMER(timerName, timerTime)   static uint16_t timerName##_interval = timerTime,  \
-                                                    timerName##_last = timer16Bit()+random(timerName##_interval,(timerName##_interval*1.5));
 
-#define RESTART_16Bit_TIMER(timerName)              { timerName##_last = timer16Bit()+timerName##_interval; }
+#define DECLARE_16Bit_TIMER(timerName, timerTime)   static uint16_t timerName##_interval = timerTime,                                       \
+                                                    timerName##_next = timer16Bit()+random(timerName##_interval,(timerName##_interval*1.5)),\
+                                                    timerName##_prev = timer16Bit(),                                                        \
+                                                    timerName##_refTime = timer16Bit();
 
-#define SINCE_16Bit(timerName)                      ((int16_t)(timer16Bit() - timerName##_last))
+#define RESTART_16Bit_TIMER(timerName)              { timerName##_next = timer16Bit()+timerName##_interval; }
 
-//#define TIME_LEFT_16Bit(timerName)                   ((uint16_t)((timerName##_last - timer16Bit()) - 0x7FFF))
-#define TIME_LEFT_16Bit(timerName)                  (__TIME_LEFT_16Bit(timerName##_last))
+#define TIME_LEFT_16Bit(timerName)                  (__TIME_LEFT_16Bit(timerName##_next))
 
-#define DUE_16Bit(timerName)              (__DUE_16Bit(timerName##_last, timerName##_interval) )
+#define DUE_16Bit(timerName) (__DUE_16Bit(timerName##_next, timerName##_prev, timerName##_interval, timerName##_refTime) )
 
-uint16_t __DUE_16Bit(uint16_t &last, uint16_t interval)
+uint16_t __DUE_16Bit(uint16_t &next, uint16_t &prev, uint16_t interval, uint16_t &refTime)
 {
-  if (timer16Bit() > last)
+  //  0<(t)--------------------------------(r)--(n)->MAX
+  //  refTime > timer so a rollover has occured
+  //  we now need to advance the 'next' until it also
+  //  roll's over
+  if (refTime > timer16Bit()) // rollover on timer occurd
   {
-    bool bPrint = true;
-    //Serial.printf("[a](timer[%4d] - last[%4d]) => [%4d] > interval[%d]", timer, last, ((int16_t)(timer - last)), ((int16_t)interval));
-    while ( (timer16Bit() - last) > interval) 
+    Serial.printf("16Bit: [%d] rollover [%d].. next[%d] ", refTime, timer16Bit(), next);
+    //  0<----------------------------(ni)------(n)->MAX
+    //  we have to advance (next+interval) until it is > next
+    while(next > (next+interval)) // add interval to next until it also roll's over
     {
-      //if (bPrint) Serial.printf("16Bit[%5d] last[%5d] >> last+=%d\r\n", timer16Bit(), last, interval);
-      last += interval;
-      bPrint = false;
+      next += interval;
+      Serial.print("+");
+    }
+    Serial.printf(" .. next[%d]\r\n", next);
+    //  0<-(n)(n+i)--------------------------------->MAX
+  }
+  
+  //  0<--(n)---------------------------------(p)->MAX
+  //  prev > next so a rollover of next has occured
+  //  we now need to advance time (wast) until the
+  //  timer also roll's over
+  if (prev > next) // rollover on next occurd
+  {
+    Serial.printf("16Bit: prev[%d] rollover next[%d] \r\n", prev, next);
+    //--- now we need to wait for the timer to also rollover!
+    Serial.printf("16Bit: wast some time: timer[%d][%d] ..", timer16Bit(), (timer16Bit()>>15));
+    //  0<--------------------------------------(t)->MAX
+    while((timer16Bit()>>15)) //--- wait for timer to rollover
+    {
+      //--- do some background tasks in here (to be implemented)
+      //Serial.print("t");
+      delay(10);
       yield();
     }
-    //if (!bPrint) Serial.printf("16Bit[%5d] >>>> last[%5d] \r\n", timer16Bit(), last);
+    Serial.printf(" .. new timer[%d]\r\n", timer16Bit());
+    //  0<(t)--------------------------------------->MAX
   }
 
-  if (timer16Bit() > last)
+  //  now what if next > (timer + interval)??
+  //  0<-------------(ti)------(n)---------------->MAX
+  //  we obviously missed some next events and now we
+  //  have to catch-up
+  if (next > (timer16Bit() + interval))
   {
-    if ((timer16Bit() - last) > interval)
-          return 0;
-    else  return (last += interval);
+    Serial.printf("16Bit: catch-up: next > (timer+interval) => [%d] > [%d] ..", next, (timer16Bit()+interval));
+    while (next > (timer16Bit()+interval) )
+    {
+      next+=interval;
+      yield();
+    }
+    Serial.printf(".. timer[%d] next[%d]\r\n", timer16Bit(), next);
   }
+  //  0<-------------------------(t)(n)---------->MAX
+
+
+  prev  = next;
+  if (timer16Bit() > next)  // timer is overdue
+  {
+    next   += interval;
+    if ((next - timer16Bit()) < 1)  // if time left
+    {
+      next += interval; // make sure next > timer16Bit()!!!
+    }
+    refTime = timer16Bit();
+    return next;  // set new next
+  }
+  refTime = timer16Bit();
   return 0;
 }
 
-uint16_t __TIME_LEFT_16Bit(uint16_t last)
+
+uint16_t __TIME_LEFT_16Bit(uint16_t next)
 {
-  if (last > timer16Bit()) return (last - timer16Bit());
+  if (next > timer16Bit()) return (next - timer16Bit());
   return 0;
   
 } // __TIME_LEFT_16Bit()
