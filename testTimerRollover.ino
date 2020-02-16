@@ -46,7 +46,7 @@ void print16BitTest1()
   {
     Serial.printf(" TOOK LONG!!!");
   }
-  Serial.printf(" next shot in [%d]ms\r\n", TIME_LEFT_16Bit(test16BitTest1));
+  Serial.printf(" next shot in [%d]ms\r\n", (uint16_t)TIME_LEFT_16Bit(test16BitTest1));
   lastPrint = millis();
   
 } // print16BitTest1()
@@ -70,7 +70,7 @@ void print16BitTest2()
   {
     Serial.printf(" TOOK LONG!!!");
   }
-  Serial.printf(" next shot in [%d]ms\r\n", TIME_LEFT_16Bit(test16BitTest2));
+  Serial.printf(" next shot in [%d]ms\r\n", (uint16_t)TIME_LEFT_16Bit(test16BitTest2));
   lastPrint = millis();
   
 } // print16BitTest2()
@@ -94,7 +94,7 @@ void print16BitTest3()
   {
     Serial.printf(" TOOK LONG!!!");
   }
-  Serial.printf(" next shot in [%d]ms\r\n", TIME_LEFT_16Bit(test16BitTest3));
+  Serial.printf(" next shot in [%d]ms\r\n", (uint16_t)TIME_LEFT_16Bit(test16BitTest3));
   lastPrint = millis();
   
 } // print16BitTest3()
