@@ -62,15 +62,32 @@
 
 #define CHANGE_INTERVAL CHANGE_INTERVAL_SEC
 
-#define TIME_LEFT_MIN(timerName)                ((timerName##_due - millis())/ 60 / 1000)
-#define TIME_LEFT_SEC(timerName)                ((timerName##_due - millis()) / 1000)
-#define TIME_LEFT_MS(timerName)                 ((timerName##_due - millis()))
+#define TIME_LEFT_MIN(timerName)                  ((timerName##_due - millis())/ 60 / 1000)
+#define TIME_LEFT_SEC(timerName)                  ((timerName##_due - millis()) / 1000)
+#define TIME_LEFT_MS(timerName)                   ((timerName##_due - millis()))
 #define TIME_LEFT     TIMER_LEFT_SEC
 
 #define RESTART_TIMER(timerName)                  timerName##_due = millis()+timerName##_interval; 
 
 #define SINCE(timerName)                          ((int32_t)(millis() - timerName##_due))
-#define DUE(timerName)                            (( SINCE(timerName) >= 0) ? (timerName##_due+=timerName##_interval):0)
+//#define DUE(timerName)                            (( SINCE(timerName) >= 0) ? (timerName##_due+=timerName##_interval):0)
+#define DUE(timerName)                            (__DUE(timerName##_due, timerName##_interval))
+
+
+uint32_t __DUE(uint32_t &timer_due, uint32_t timer_interval)
+{
+  if ((int32_t)(millis() - timer_due) >= 0) 
+  {
+      while ((int32_t)(millis() - timer_due) >= 0) 
+      {
+        timer_due +=  timer_interval;
+      }
+  } 
+  else 
+    return 0;
+  
+  return timer_due;  
+}
 
 /*
  *  16 bit timers macro's for testing purposes
