@@ -113,11 +113,19 @@ uint16_t __DUE_16Bit(uint16_t &timer_due, uint16_t &timer_last, uint16_t timer_i
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
-    //timer_last = timer16Bit();
-    while ((int16_t)(timer16Bit() - timer_due) >= 0) 
-    {
-      timer_due  += timer_interval;
-    }
+//    while ((int16_t)(timer16Bit() - timer_due) >= 0) 
+//    {
+//      timer_due  += timer_interval;
+//    }
+
+Serial.printf("timer[%6d] due[%6d] interval[%6d] [%10d] [%10d] next[%10d]",
+                          timer16Bit(), timer_due, timer_interval, 
+                          (timer16Bit() - timer_due) ,
+                          ((int)((timer16Bit() - timer_due) / timer_interval)+1),
+                          ((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval);
+                          
+        timer_due  += ((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval;
+
   } 
   else return 0;
 
