@@ -78,14 +78,9 @@ uint32_t __DUE(uint32_t &timer_due, uint32_t timer_interval)
 {
   if ((int32_t)(millis() - timer_due) >= 0) 
   {
-      while ((int32_t)(millis() - timer_due) >= 0) 
-      {
-        timer_due +=  timer_interval;
-      }
+      timer_due +=  timer_interval;
   } 
-  else 
-    return 0;
-  
+  else return 0;
   return timer_due;  
 }
 
@@ -114,14 +109,9 @@ uint16_t __DUE_16Bit(uint16_t &timer_due, uint16_t timer_interval)
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
-//      while ((int16_t)(timer16Bit() - timer_due) >= 0) 
-//      {
-        timer_due +=  timer_interval;
-//      }
-  } 
-  else 
-    return 0;
-  
+    timer_due +=  timer_interval; 
+  }
+  else return 0;
   return timer_due;  
 }
 
