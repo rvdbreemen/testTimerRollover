@@ -115,10 +115,7 @@ uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, bool doSkip)
   {
     if (doSkip)
     {
-      while ((int32_t)(millis() - timer_due) >= 0) 
-      {
-        timer_due += timer_interval;
-      } 
+      timer_due += timer_interval;
     }
     else
     {
