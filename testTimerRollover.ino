@@ -19,7 +19,8 @@
 #define DUE_TEST3       8000       // set 16Bit timer  8000ms
 #define DUE_TEST4      12000       // set 16Bit timer 12000ms
 
-#include "safeTimersFastRO.h" // uses 16Bit timer and micros() -> rollover in 1 hour and 10 minutes
+#include "safeTimersFastRO.h" // uses 16Bit timer --> rollover in 1 minute and some seconds
+                              // and micros() -> rollover in 1 hour and 10 minutes
 
 
   DECLARE_16BIT_TIMER(timerTestCatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
@@ -66,7 +67,8 @@ void print16BitTest(int testNr, uint16_t duration)
 void setup() {
   Serial.begin(115200);
   Serial.println("\r\n\n.. and then it begins ...\r\n\n");
-  Serial.printf("\nDue_Test1[%d]ms, DUE_TEST3[%d]ms Due_Test4[%d]\r\n\n", DUE_TEST1, DUE_TEST3, DUE_TEST4);
+  Serial.printf("\nDue_Test1[%d]ms, Due_Test2[%d]ms, Due_Test3[%d]ms, Due_Test4[%d]\r\n\n"
+                                                , DUE_TEST1, DUE_TEST2, DUE_TEST3, DUE_TEST4);
   delay(1000);
   
   RESTART_TIMER(delay41Secs);
@@ -146,12 +148,12 @@ void loop() {
     RESTART_TIMER(wait4Sec);
     Serial.printf("test1 counted[%d] times fired in [%d] events" 
                                                             , test1Counter
-                                                            , (int32_t)((millis() - startTime) / DUE_TEST1));
+                                                            , ((millis() - startTime) / DUE_TEST1));
     if (test1Counter ==  ((millis() - startTime) / DUE_TEST1))
           Serial.println(" --> OK!");
     else 
     {
-      uint16_t error = (int32_t)(((millis() - startTime) / DUE_TEST1) - test1Counter);
+      int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST1) - test1Counter);
       Serial.printf(" --> ERROR! (%d off)\r\n", error);
     }
     Serial.printf("test2 counted[%d] times fired in [%d] events\r\n" 
@@ -166,6 +168,7 @@ void loop() {
       if ((p%10000) == 0) Serial.print("w");
       yield();
     }
+    delay(random(1000));
     Serial.println();
     Serial.printf("after100Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n"
                                                             , TIME_LEFT_SEC(after100Secs)
@@ -193,6 +196,7 @@ void loop() {
                                                             , TIME_LEFT_SEC(delay41Secs)
                                                             , TIME_LEFT_MS(delay41Secs)
                                                             , TIME_LEFT_MIN(delay41Secs));
+    delay(random(1000));
     RESTART_TIMER(after100Secs);
   }
 
