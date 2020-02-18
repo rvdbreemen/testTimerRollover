@@ -90,7 +90,3 @@ include it at the beginning of your program.
      #include "safeTimers,h"
 ```
 
-The timer-rollover problem is explained by `Edgar Bonet` on `StackExchange`.
-
-You can find the discussion [here](https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover).
-
