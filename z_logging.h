@@ -78,11 +78,11 @@ after100Secs: Time left [ 95]sec., [  95855]ms, [ 1]min.
 [ 7708][ 4143]ms  [15:25:212]                               => test1 fired!
 [ 7709][ 4137]ms            [15:25:213]                     => test2 fired!
 [ 7716][ 4138]ms                      [15:25:220]           => test3 fired!
-[ 7722][   13]ms  [15:25:226]                               => test1 fired!
-[ 7729][    0]ms  [15:25:233]                               => test1 fired!
-[ 7736][    0]ms  [15:25:240]                               => test1 fired!
-[ 7742][    0]ms  [15:25:246]                               => test1 fired!
-[ 7749][    0]ms  [15:25:253]                               => test1 fired!
+[ 7722][   13]ms  [15:25:226]                               => test1 fired! <<<< inhaal aktie!
+[ 7729][    0]ms  [15:25:233]                               => test1 fired! <<<< inhaal aktie!
+[ 7736][    0]ms  [15:25:240]                               => test1 fired! <<<< inhaal aktie!
+[ 7742][    0]ms  [15:25:246]                               => test1 fired! <<<< inhaal aktie!
+[ 7749][    0]ms  [15:25:253]                               => test1 fired! <<<< inhaal aktie!
 [ 8073][ 4488]ms                                [15:25:577] => test4 fired!
 [10528][ 2772]ms  [15:28:032]                               => test1 fired!
 [10709][ 2994]ms            [15:28:213]                     => test2 fired!
