@@ -4,6 +4,12 @@ This program is to test the millis() rollover in just a few seconds ...
 There is an ongoing discussion on the internat about the problems due to 
 the rollover of the millis() timer function.
 
+The timer-rollover problem is explained by `Edgar Bonet` on `StackExchange`.
+
+You can find the discussion [here](https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover).
+
+
+
 This program tackles the rollover problem by means of a `safeTimers.h` file originally created by **Erik**
 and modified by *Willem Aandewiel* and *Robert van den Breemen*.
 
@@ -78,7 +84,11 @@ For even faster testing there are also definitions for 16 bit timers:
 Those macro's work the same as the 32 bit equevalents but the rollover time is reduced to 1 minute and some 
 seconds.
 
-If you want to use the rollover-safe-timers in your program just copy `safeTimers.h` 
+If you want to use the rollover-safe-timers in your program just copy `safeTimers.h` and
+include it at the beginning of your program.
+```
+     #include "safeTimers,h"
+```
 
 The timer-rollover problem is explained by `Edgar Bonet` on `StackExchange`.
 
