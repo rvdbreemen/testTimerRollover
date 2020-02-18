@@ -111,7 +111,7 @@ void setup() {
 void loop() {
   int p;
 
-  if ( DUE_16Bit(timerTest1, true) && 1 ) {
+  if ( DUE_16Bit(timerTest1, false) && 1 ) {
     if (timerTest1_last <= 0) timerTest1_last = timer16Bit();
     if ((int16_t)(timer16Bit() - timerTest1_last) < (DUE_TEST1 * 0.9))
     {
