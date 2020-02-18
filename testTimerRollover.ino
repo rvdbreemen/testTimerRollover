@@ -11,7 +11,7 @@
  * you want to use the safeTimers.h file in your program.
  */
 
-#define DUE_TEST1       3000       // set 16Bit timer  3000ms
+#define DUE_TEST1       1100       // set 16Bit timer  3000ms
 #define DUE_TEST2       8000       // set 16Bit timer  8000ms
 #define DUE_TEST3      12000       // set 16Bit timer 12000ms
 
