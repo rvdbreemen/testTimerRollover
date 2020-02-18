@@ -115,11 +115,7 @@ uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, bool doSkip)
   {
     if (doSkip)
     {
-      while ((int32_t)(micros() - timer_due) >= 0) 
-      {
-        timer_due += timer_interval;
-        yield();
-      } 
+      timer_due += timer_interval;
     }
     else
     {
@@ -168,7 +164,6 @@ uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, bool doSkip)
     if (doSkip)
     {
       timer_due = timer16Bit() + timer_interval;
-      yield();
     }
     else
     {
