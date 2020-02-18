@@ -63,8 +63,8 @@
  *  
  */
 
-#define SKIP_MISSED_EVENTS      true
-#define CATCH_UP_MISSED_EVENTS  false
+#define SKIP_MISSED_EVENTS      0
+#define CATCH_UP_MISSED_EVENTS  1
 
 #define DECLARE_TIMER_MIN(timerName, timerTime, doSkip) \
                                           static uint32_t timerName##_interval = (timerTime * 60 * 1000 * 1000), \
@@ -82,54 +82,77 @@
                                                                +random(timerName##_interval / 3);       \
                                           static bool timerName##_skip = doSkip;
 
-#define DECLARE_TIMER   DECLARE_TIMER_SEC
+#define DECLARE_TIMER   DECLARE_TIMER_MS
 
 #define CHANGE_INTERVAL_MIN(timerName, timerTime, doSkip) \
-                                          timerName##_interval = (timerTime * 60 * 1000 * 1000) \
+                                          timerName##_interval = (timerTime * 60 * 1000 * 1000);\
                                           timerName##_due = micros()+timerName##_interval;      \
                                           timerName##_skip = doSkip;
 #define CHANGE_INTERVAL_SEC(timerName, timerTime, doSkip) \
-                                          timerName##_interval = (timerTime * 1000 * 1000)      \
+                                          timerName##_interval = (timerTime * 1000 * 1000);     \
                                           timerName##_due = micros()+timerName##_interval;      \
                                           timerName##_skip = doSkip;
 #define CHANGE_INTERVAL_MS(timerName, timerTime, doSkip)  \
-                                          timerName##_interval = (timerTime * 1000)             \
+                                          timerName##_interval = (timerTime * 1000);            \
                                           timerName##_due = micros()+timerName##_interval;      \
                                           timerName##_skip = doSkip;
 
-#define CHANGE_INTERVAL CHANGE_INTERVAL_SEC
+#define CHANGE_INTERVAL CHANGE_INTERVAL_MS
 
-#define TIME_LEFT_MIN(timerName)          ((timerName##_due - micros()) / (60 * 1000 * 1000))
-#define TIME_LEFT_SEC(timerName)          ((timerName##_due - micros()) / (1000 * 1000))
-#define TIME_LEFT_MS(timerName)           ((timerName##_due - micros()) / (1000))
-#define TIME_LEFT     TIMER_LEFT_SEC
+#define TIME_LEFT(timerName)          ( __TIME_LEFT__(timerName##_due, timerName##_interval) ) 
+#define TIME_LEFT_MS(timerName)       ( (TIME_LEFT(timerName) ) )
+#define TIME_LEFT_MIN(timerName)      ( (TIME_LEFT(timerName) ) / (60 * 1000))
+#define TIME_LEFT_SEC(timerName)      ( (TIME_LEFT(timerName) ) / 1000 )
 
-#define RESTART_TIMER(timerName)          timerName##_due = micros()+timerName##_interval; 
+#define TIME_PAST(timerName)          ( (timerName##_interval - TIME_LEFT(timerName)) )
+#define TIME_PAST_MS(timerName)       ( (TIME_PAST(timerName) )
+#define TIME_PAST_SEC(timerName)      ( (TIME_PAST(timerName) / 1000) )
+#define TIME_PAST_MIN(timerName)      ( (TIME_PAST(timerName) / (60*1000)) )
 
-#define DUE(timerName)                    (__DUE__(timerName##_due, timerName##_interval, timerName##_skip))
+#define RESTART_TIMER(timerName)      ( timerName##_due = micros()+timerName##_interval ); 
+
+#define DUE(timerName)                ( __DUE__(timerName##_due, timerName##_interval, timerName##_skip) )
 
 
-uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, bool doSkip)
+uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, uint8_t doSkip)
 {
   if ((int32_t)(micros() - timer_due) >= 0) 
   {
-    if (doSkip)
-    {
-      while ((int32_t)(micros() - timer_due) >= 0) 
-      {
-        timer_due += timer_interval;
-      } 
+    switch (doSkip) {
+        case 1:   timer_due += timer_interval;
+                  break;
+        default:  timer_due = micros() + timer_interval;
+                  break;
     }
-    else
-    {
-      timer_due  += timer_interval;
-    }
+    return timer_due;  
   }
-  else return 0;
   
-  return timer_due;  
+  return 0;
   
 } // __DUE__()
+
+
+uint16_t __TIME_LEFT__(uint16_t timer_due, uint16_t timer_interval)
+{
+  uint16 tmp;
+  if ((timer_due - micros()) >= 0)
+  {
+    tmp = timer_due - micros();
+  }
+  else
+  {
+    tmp = ((timer_due+ UINT16_MAX) - micros());
+  }
+  //--- ok, this is a bit silly but will normaly 
+  //--- only occur once every 49 day's
+  while (tmp >= timer_interval)
+  {
+    tmp -= timer_interval;
+    yield();
+  }
+  return tmp;
+  
+} // __TIME_LEFT__()
 
 /*
  *  16 bit timers macro's for testing purposes
@@ -149,38 +172,66 @@ uint16_t timer16Bit()
                                             static bool timerName##_skip = doSkip;
 
 #define CHANGE_16BIT_INTERVAL(timerName, timerTime, doSkip) \
-                                            timerName##_interval = timerTime                          \
+                                            timerName##_interval = timerTime;                         \
                                             timerName##_due = micros()+timerName##_interval;          \
                                             timerName##_skip = doSkip;
                                                     
 #define RESTART_16BIT_TIMER(timerName)      timerName##_due = timer16Bit()+timerName##_interval;
 
-#define TIME_LEFT_16BIT(timerName)          ((int16_t)(timerName##_due-timer16Bit()))
+#define TIME_LEFT_16BIT(timerName)          ( __TIME_LEFT_16BIT__(timerName##_due, timerName##_interval) ) 
+#define TIME_LEFT_SEC_16BIT(timerName)      ( (TIME_LEFT_16BIT(timerName) / 1000) )
 
-#define DUE_16BIT(timerName)                (__DUE_16BIT(timerName##_due, timerName##_interval, timerName##_skip))
+#define TIME_PAST_16BIT(timerName)          ( (timerName##_interval - TIME_LEFT_16BIT(timerName)) )
+#define TIME_PAST_SEC_16BIT(timerName)      ( (TIME_PAST_16BIT(timerName) / 1000) )
+
+#define DUE_16BIT(timerName)                ( __DUE_16BIT__(timerName##_due        \
+                                                         , timerName##_interval \
+                                                         , timerName##_skip) )
 
 
-uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, bool doSkip)
+uint16_t __DUE_16BIT__(uint16_t &timer_due, uint16_t timer_interval, uint8_t doSkip)
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
-    if (doSkip)
-    {
-      timer_due = timer16Bit() + timer_interval;
-    }
-    else
-    {
-//      while ((int16_t)(timer16Bit() - timer_due) >= 0) 
-  //    {
-        timer_due += timer_interval;
-    //  } 
-    }
+    switch (doSkip) {
+        case 1:   timer_due += timer_interval;
+                  break;
+        default:  timer_due = timer16Bit() + timer_interval;
+                  //onderstaande formule geeft exact hetzelfde resultaat als de regel hierboven
+                  //timer_due  += (((timer16Bit() - timer_due) / timer_interval)+1 ) * timer_interval;
+                  break;
+    } // switch()
+    
+    return timer_due;  
   }
-  else return 0;
   
-  return timer_due;  
+  return 0;
 
-} // __DUE_16BIT()
+} // __DUE_16BIT__()
+
+
+uint16_t __TIME_LEFT_16BIT__(uint16_t timer_due, uint16_t timer_interval)
+{
+  uint16 tmp;
+  if ((timer_due - timer16Bit()) >= 0)
+  {
+    tmp = timer_due - timer16Bit();
+  }
+  else
+  {
+    tmp = ((timer_due+ UINT16_MAX) - timer16Bit());
+  }
+  //--- ok, this is a bit silly but will normaly 
+  //--- only occur once every 49 day's
+  while (tmp >= timer_interval)
+  {
+    tmp -= timer_interval;
+    yield();
+  }
+  
+  return tmp;
+  
+} // __TIME_LEFT_16BIT__()
 
 /*
  * 
