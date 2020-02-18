@@ -21,7 +21,8 @@ In the `safeTimers.h` file (original `timer.h` by Erik) there are four 16bit mac
 ```
 
 that uses a 16 bit timer to substitute `millis()` by `timer16Bit()`.
-If you want to use the `safeTimers.h` file in your own sketches, just remove the last lines.
+If you want to use the `safeTimers.h` file in your own sketches, just remove the last lines and replace `micros()`
+by `millis()`.
 
 The timer-rollover problem is explained by `Edgar Bonet` on `StackExchange`.
 

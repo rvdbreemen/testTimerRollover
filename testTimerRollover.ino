@@ -11,99 +11,66 @@
  * you want to use the safeTimers.h file in your program.
  */
 
-#define DUE_TEST1       1100       // set 16Bit timer  3000ms
-#define DUE_TEST2       8000       // set 16Bit timer  8000ms
-#define DUE_TEST3      12000       // set 16Bit timer 12000ms
+#define DUE_TEST1       3000       // set 16Bit timer  3000ms
+#define DUE_TEST2       3000       // set 16Bit timer  3000ms
+#define DUE_TEST3       8000       // set 16Bit timer  8000ms
+#define DUE_TEST4      12000       // set 16Bit timer 12000ms
 
-#include "safeTimers2.h"
+#include "safeTimers.h"
 
 
-  DECLARE_16Bit_TIMER(timerTest1, DUE_TEST1)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16Bit_TIMER(timerTest2, DUE_TEST2)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16Bit_TIMER(timerTest3, DUE_TEST3)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest1, DUE_TEST1)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest2, DUE_TEST2)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest3, DUE_TEST3)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest4, DUE_TEST4)      // print text every INTERVAL timer16Bit() ms
 
-  DECLARE_TIMER_MS(wait3Sec, 3123)                    // delay 3+ seconds
-  DECLARE_TIMER_SEC(delay47Secs, 47)                  // every 47 seconds 
+  DECLARE_TIMER_MS(wait4Sec, 4123)                    // delay 4+ seconds
+  DECLARE_TIMER_SEC(delay41Secs, 41)                  // every 41 seconds 
 
   DECLARE_TIMER_SEC(after100Secs, 100)
   DECLARE_TIMER_SEC(hold15Secs, 15)
 
-uint32_t microsDetectRollover = micros();
+uint32_t  microsDetectRollover = micros();
+uint32_t  startTime            = 0;
+uint32_t  test1Counter         = 0;
+uint32_t  test2Counter         = 0;
 
 //================================================================================================
-void print16BitTest1()
+void print16BitTest(int testNr, uint16_t duration)
 {
-  static unsigned long lastPrint = 0;
-  unsigned long msTime = millis();
-  unsigned long duration = msTime - lastPrint;
-
-  Serial.printf("[%5d][%5d]ms [%02d:%02d:%03d]           DUE_16Bit(Test1) fired!\r\n"
+                  // 1...5....10...5....20...5....30...5....40...5....50...5....60
+  char spaces[61] = "                                                            ";
+  char spaceP[61] = "";
+  char spaceE[61] = "";
+  strncpy( spaceP, spaces, ((testNr-1)*10) );
+  strncpy( spaceE, spaces, (30-((testNr-1)*10)) );
+  Serial.printf("[%5d][%5d]ms %s [%02d:%02d:%03d] %s=> test%d fired!\r\n"
                                                            , timer16Bit()
                                                            , duration
+                                                           , spaceP
                                                            , ((millis() / (60 * 1000)) % 60)
                                                            , ((millis() / 1000) % 60)
-                                                           , (millis() % 1000));
+                                                           , (millis() % 1000)
+                                                           , spaceE
+                                                           , testNr);
     
-  lastPrint = millis();
-  
-} // print16BitTest1()
-
-
-//================================================================================================
-void print16BitTest2()
-{
-  static unsigned long lastPrint = 0;
-  unsigned long  msTime = millis();
-  unsigned long  duration = millis() - lastPrint;
-
-  Serial.printf("[%5d][%5d]ms      [%02d:%02d:%03d]      DUE_16Bit(Test2) fired!\r\n"
-                                                           , timer16Bit()
-                                                           , duration
-                                                           , ((millis() / (60 * 1000)) % 60)
-                                                           , ((millis() / 1000) % 60)
-                                                           , (millis() % 1000));
-    
-  lastPrint = millis();
-  
-} // print16BitTest2()
-
-
-//================================================================================================
-void print16BitTest3()
-{
-  static unsigned long lastPrint = 0;
-  unsigned long  msTime = millis();
-  unsigned long  duration = millis() - lastPrint;
-
-  Serial.printf("[%5d][%5d]ms           [%02d:%02d:%03d] DUE_16Bit(Test3) fired!\r\n"
-                                                           , timer16Bit()
-                                                           , duration
-                                                           , ((millis() / (60 * 1000)) % 60)
-                                                           , ((millis() / 1000) % 60)
-                                                           , (millis() % 1000));
-    
-  lastPrint = millis();
-  delay(1000);  // emulate bussy
-  
-} // print16BitTest3()
+} // print16BitTest()
 
 
 //================================================================================================
 void setup() {
   Serial.begin(115200);
   Serial.println("\r\n\n.. and then it begins ...\r\n\n");
-  Serial.printf("\nDue_Test1[%d]ms, Due_Test2[%d]ms Due_Test3[%d]\r\n\n", DUE_TEST1, DUE_TEST2, DUE_TEST3);
+  Serial.printf("\nDue_Test1[%d]ms, DUE_TEST3[%d]ms Due_Test4[%d]\r\n\n", DUE_TEST1, DUE_TEST3, DUE_TEST4);
   delay(1000);
-  RESTART_16Bit_TIMER(timerTest1);
-  RESTART_16Bit_TIMER(timerTest2);
-  RESTART_16Bit_TIMER(timerTest3);
-  RESTART_TIMER(delay47Secs);
+  RESTART_TIMER(delay41Secs);
   RESTART_TIMER(after100Secs);
 
   Serial.printf("StartTime[%02d:%02d:%03d]\r\n" , ((millis() / (60 * 1000)) % 60)
                                                 , ((millis() / 1000) % 60)
                                                 , (millis() % 1000));
-
+  startTime = millis();
+  
 } // setup()
 
 
@@ -111,80 +78,97 @@ void setup() {
 void loop() {
   int p;
 
-  if ( DUE_16Bit(timerTest1, false) && 1 ) {
-    if (timerTest1_last <= 0) timerTest1_last = timer16Bit();
-    if ((int16_t)(timer16Bit() - timerTest1_last) < (DUE_TEST1 * 0.9))
-    {
-      Serial.printf("(%5d) Test1 last@[%5d] -> [%5d]ms since last due -> SKIPPING\r\n"
-                                                                , timer16Bit()
-                                                                , timerTest1_last
-                                                                , (int16_t)(timer16Bit() - timerTest1_last));
-    }
-    else {
-      print16BitTest1();
-      timerTest1_last = timer16Bit();
-    }
+//---TEST 1-------------------------------------------------------------------
+// t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11
+//                            <processor>
+//                            <  bussy  >
+// d1<int>d2<int>d3<int>d4 ..............d5.d6.d7<->d8<int>d9<int>d10 enz
+//
+  if ( DUE_16BIT(timerTest1) && 1 ) 
+  {
+    static unsigned long lastPrint = 0;
+    unsigned long duration = millis() - lastPrint;
+
+    test1Counter++;
+    print16BitTest(1, duration);
+
+    lastPrint = millis();
+  }
+
+//---TEST 2-------------------------------------------------------------------
+// t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11
+//                            <processor>
+//                            <  bussy  >
+// d1<int>d2<int>d3<int>d4 ..............d5<->d6<int>d7<int>d8<int>d9 enz
+//
+  if ( DUE_16BIT(timerTest2) && 1 ) 
+  {
+    static unsigned long lastPrint = 0;
+    unsigned long duration = millis() - lastPrint;
+    
+    RESTART_16BIT_TIMER(timerTest2);
+
+    test2Counter++;
+    print16BitTest(2, duration);
+
+    lastPrint = millis();
   }
   
-  if ( DUE_16Bit(timerTest2, true) && 1 ) {
-    //Serial.printf("[%5d] Test2 [%d]ms since last due\r\n", timerTest2_last
-    //                                                     , SINCE_LAST_DUE_16Bit(timerTest2));
-    if (timerTest2_last <= 0) timerTest2_last = timer16Bit();
-    if ((int16_t)(timer16Bit() - timerTest2_last) < (DUE_TEST2 * 0.9))
-    {
-      Serial.printf("(%5d)  Test2 last@[%5d] -> [%5d]ms since last due -> SKIPPING\r\n"
-                                                                , timer16Bit()
-                                                                , timerTest2_last
-                                                                , (int16_t)(timer16Bit() - timerTest2_last));
-    }
-    else {
-      print16BitTest2();
-      timerTest2_last = timer16Bit();
-    }
-  }
-
-  if ( DUE_16Bit(timerTest3, true) && 1 ) {
-    /*
-    if (SINCE_LAST_DUE_16Bit(timerTest3) < (DUE_TEST3 * 0.9))
-    {
-      Serial.printf(" >>>>>  Test3 last@[%5d] -> [%5d]ms since last due -> SKIPPING\r\n"
-                                                                , timerTest3_last
-                                                                , SINCE_LAST_DUE_16Bit(timerTest3));
-    }
-    else
-    */ 
-    {
-      print16BitTest3();
-    }
-  }
-
-  //--- see what happens if the processor is occupied and can not handle timers (every 47 seconds)
-  if ( DUE(delay47Secs) && 1)
+  if ( DUE_16BIT(timerTest3) && 1 ) 
   {
-    //Serial.printf("delay47Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(delay47Secs)
-    //                                                        , TIME_LEFT_MS(delay47Secs)
-    //                                                        , TIME_LEFT_MIN(delay47Secs));
-    //Serial.print("wait");
-    RESTART_TIMER(wait3Sec);
-    Serial.printf("wait3Sec:    Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(wait3Sec)
-                                                            , TIME_LEFT_MS(wait3Sec)
-                                                            , TIME_LEFT_MIN(wait3Sec));
+    static unsigned long lastPrint = 0;
+    unsigned long duration = millis() - lastPrint;
+    
+    print16BitTest(3, duration);
+    
+    lastPrint = millis();
+  }
+
+  if ( DUE_16BIT(timerTest4) && 1 )
+  {
+    static unsigned long lastPrint = 0;
+    unsigned long duration = millis() - lastPrint;
+    
+    print16BitTest(4, duration);
+
+    lastPrint = millis();
+  }
+  //=== end of 16 bit timer tests ====================
+  
+  //--- see what happens if the processor is occupied and can not handle timers (every 41 seconds)
+  if ( DUE(delay41Secs) && 1)
+  {
+    RESTART_TIMER(wait4Sec);
+    Serial.printf("test1 counted[%d] events in [%d] seconds" 
+                                                            , test1Counter
+                                                            , ((millis() - startTime) / DUE_TEST1));
+    if (test1Counter ==  ((millis() - startTime) / DUE_TEST1))
+          Serial.println(" --> OK!");
+    else 
+    {
+      uint16_t error = ((millis() - startTime) / DUE_TEST1) - test1Counter;
+      Serial.printf(" --> ERROR! (%d off)\r\n", error);
+      //test1Counter = ((millis() - startTime) / DUE_TEST1);
+    }
+    Serial.printf("test2 counted[%d] events in [%d] seconds\r\n" 
+                                                            , test2Counter
+                                                            , ((millis() - startTime) / DUE_TEST2));
+    
     p=0;
-    //--- be bussy for 3 seconds. This influance mainly Test1 
-    while ( !DUE(wait3Sec) )
+    //--- be bussy for 4 seconds. This influance mainly Test1 & 2
+    while ( !DUE(wait4Sec) )
     {
       p++;
       if ((p%10000) == 0) Serial.print("w");
       yield();
     }
     Serial.println();
-    //Serial.printf("delay47Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(delay47Secs)
-    //                                                        , TIME_LEFT_MS(delay47Secs)
-    //                                                        , TIME_LEFT_MIN(delay47Secs));
-    RESTART_TIMER(delay47Secs);
+    Serial.printf("after100Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n"
+                                                            , TIME_LEFT_SEC(after100Secs)
+                                                            , TIME_LEFT_MS(after100Secs)
+                                                            , TIME_LEFT_MIN(after100Secs));
+    RESTART_TIMER(delay41Secs);
 
-    //Serial.printf("Test1: ms left [%3d]\r\n", TIME_LEFT_16Bit(timerTest1));
-    //Serial.printf("Test2: ms left [%3d]\r\n", TIME_LEFT_16Bit(timerTest2));
   }
 
   //-- every 100 seconds do the stress test for all the timers --
@@ -202,9 +186,10 @@ void loop() {
       yield();
     }
     Serial.println(".. continue!");
-    Serial.printf("delay47Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n", TIME_LEFT_SEC(delay47Secs)
-                                                            , TIME_LEFT_MS(delay47Secs)
-                                                            , TIME_LEFT_MIN(delay47Secs));
+    Serial.printf("delay41Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n"
+                                                            , TIME_LEFT_SEC(delay41Secs)
+                                                            , TIME_LEFT_MS(delay41Secs)
+                                                            , TIME_LEFT_MIN(delay41Secs));
     RESTART_TIMER(after100Secs);
   }
 
