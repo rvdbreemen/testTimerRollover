@@ -3,12 +3,15 @@
  * Date  : 14-02-2020
  * Thanks to Erik and Edgar Bonet
  * 
- * A program to test the micros() RollOver debacle
- * I have made some 16Bit macro's that are used with a semi millis()
- * (16 bit) timers so you don't have to wait 49 day's before a RollOver 
- * occurs.
- * Just remove the 16Bit macro's and change micros() to millis() if 
- * you want to use the safeTimers.h file in your program.
+ * A program to test the millis() RollOver debacle
+ * 
+ * The file "safeTimersFastRO.h" uses micros() so the rollover time is 
+ * only 1 hour 11 minutes and some seconds.
+ * For the test1 to test4 it uses a 16Bit timer with a Rollover time of  
+ * only 1 minute and 6 seconds!
+ * 
+ * If you want to use the safeTimers in your program, just copy the
+ * tab "safeTimers.h".
  */
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
@@ -16,19 +19,19 @@
 #define DUE_TEST3       8000       // set 16Bit timer  8000ms
 #define DUE_TEST4      12000       // set 16Bit timer 12000ms
 
-#include "safeTimers.h"
+#include "safeTimersFastRO.h" // uses 16Bit timer and micros() -> rollover in 1 hour and 10 minutes
 
 
-  DECLARE_16BIT_TIMER(timerTest1, DUE_TEST1)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest2, DUE_TEST2)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest3, DUE_TEST3)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest4, DUE_TEST4)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTestCatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTestSkip,    DUE_TEST2, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
 
-  DECLARE_TIMER_MS(wait4Sec, 4123)                    // delay 4+ seconds
-  DECLARE_TIMER_SEC(delay41Secs, 41)                  // every 41 seconds 
+  DECLARE_TIMER_MS(wait4Sec,     4123,  CATCH_UP_MISSED_EVENTS)        // delay 4+ seconds
+  DECLARE_TIMER_SEC(delay41Secs,   41,  CATCH_UP_MISSED_EVENTS)        // every 41 seconds 
 
-  DECLARE_TIMER_SEC(after100Secs, 100)
-  DECLARE_TIMER_SEC(hold15Secs, 15)
+  DECLARE_TIMER_SEC(after100Secs, 100,  CATCH_UP_MISSED_EVENTS)
+  DECLARE_TIMER_SEC(hold15Secs,    15,  CATCH_UP_MISSED_EVENTS)
 
 uint32_t  microsDetectRollover = micros();
 uint32_t  startTime            = 0;
@@ -54,6 +57,8 @@ void print16BitTest(int testNr, uint16_t duration)
                                                            , spaceE
                                                            , testNr);
     
+  delay(random(500));
+
 } // print16BitTest()
 
 
@@ -63,6 +68,7 @@ void setup() {
   Serial.println("\r\n\n.. and then it begins ...\r\n\n");
   Serial.printf("\nDue_Test1[%d]ms, DUE_TEST3[%d]ms Due_Test4[%d]\r\n\n", DUE_TEST1, DUE_TEST3, DUE_TEST4);
   delay(1000);
+  
   RESTART_TIMER(delay41Secs);
   RESTART_TIMER(after100Secs);
 
@@ -77,6 +83,7 @@ void setup() {
 //================================================================================================
 void loop() {
   int p;
+//============ Start 16 bit timers test's ================================
 
 //---TEST 1-------------------------------------------------------------------
 // t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11
@@ -84,10 +91,10 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5.d6.d7<->d8<int>d9<int>d10 enz
 //
-  if ( DUE_16BIT(timerTest1) && 1 ) 
+  if ( DUE_16BIT(timerTestCatchUp) && 1 ) 
   {
-    static unsigned long lastPrint = 0;
-    unsigned long duration = millis() - lastPrint;
+    static uint32_t lastPrint = 0;
+    uint32_t        duration = millis() - lastPrint;
 
     test1Counter++;
     print16BitTest(1, duration);
@@ -101,12 +108,10 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5<->d6<int>d7<int>d8<int>d9 enz
 //
-  if ( DUE_16BIT(timerTest2) && 1 ) 
+  if ( DUE_16BIT(timerTestSkip) && 1 ) 
   {
-    static unsigned long lastPrint = 0;
-    unsigned long duration = millis() - lastPrint;
-    
-    RESTART_16BIT_TIMER(timerTest2);
+    static uint32_t lastPrint = 0;
+    uint32_t        duration = millis() - lastPrint;
 
     test2Counter++;
     print16BitTest(2, duration);
@@ -116,8 +121,8 @@ void loop() {
   
   if ( DUE_16BIT(timerTest3) && 1 ) 
   {
-    static unsigned long lastPrint = 0;
-    unsigned long duration = millis() - lastPrint;
+    static uint32_t lastPrint = 0;
+    uint32_t        duration = millis() - lastPrint;
     
     print16BitTest(3, duration);
     
@@ -126,31 +131,30 @@ void loop() {
 
   if ( DUE_16BIT(timerTest4) && 1 )
   {
-    static unsigned long lastPrint = 0;
-    unsigned long duration = millis() - lastPrint;
+    static uint32_t lastPrint = 0;
+    uint32_t        duration = millis() - lastPrint;
     
     print16BitTest(4, duration);
 
     lastPrint = millis();
   }
-  //=== end of 16 bit timer tests ====================
+//============ End of 16 bit timers test's ===============================
   
   //--- see what happens if the processor is occupied and can not handle timers (every 41 seconds)
   if ( DUE(delay41Secs) && 1)
   {
     RESTART_TIMER(wait4Sec);
-    Serial.printf("test1 counted[%d] events in [%d] seconds" 
+    Serial.printf("test1 counted[%d] times fired in [%d] events" 
                                                             , test1Counter
-                                                            , ((millis() - startTime) / DUE_TEST1));
+                                                            , (int32_t)((millis() - startTime) / DUE_TEST1));
     if (test1Counter ==  ((millis() - startTime) / DUE_TEST1))
           Serial.println(" --> OK!");
     else 
     {
-      uint16_t error = ((millis() - startTime) / DUE_TEST1) - test1Counter;
+      uint16_t error = (int32_t)(((millis() - startTime) / DUE_TEST1) - test1Counter);
       Serial.printf(" --> ERROR! (%d off)\r\n", error);
-      //test1Counter = ((millis() - startTime) / DUE_TEST1);
     }
-    Serial.printf("test2 counted[%d] events in [%d] seconds\r\n" 
+    Serial.printf("test2 counted[%d] times fired in [%d] events\r\n" 
                                                             , test2Counter
                                                             , ((millis() - startTime) / DUE_TEST2));
     
@@ -168,7 +172,6 @@ void loop() {
                                                             , TIME_LEFT_MS(after100Secs)
                                                             , TIME_LEFT_MIN(after100Secs));
     RESTART_TIMER(delay41Secs);
-
   }
 
   //-- every 100 seconds do the stress test for all the timers --
@@ -195,7 +198,9 @@ void loop() {
 
   if (micros() < microsDetectRollover)
   {
-    Serial.println("\r\n\n*********** micros Rolled Over ****************\r\n\n");
+    Serial.println(F("\r\n\n***************************************************************************"));
+    Serial.println(F(      "************************ micros() Rolled Over *****************************"));
+    Serial.println(F(      "***************************************************************************\r\n\n"));
   }
   microsDetectRollover = micros();
 
