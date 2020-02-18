@@ -170,10 +170,7 @@ uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, bool doSkip)
     }
     else
     {
-//      while ((int16_t)(timer16Bit() - timer_due) >= 0) 
-  //    {
-        timer_due += timer_interval;
-    //  } 
+      timer_due += timer_interval;
     }
   }
   else return 0;
