@@ -107,9 +107,9 @@ uint16_t timer16Bit()
 #define TIME_LEFT_16Bit(timerName)                  ((int16_t)(timerName##_due-timer16Bit()))
 #define SINCE_LAST_DUE_16Bit(timerName)             ((int16_t)(timer16Bit()-timerName##_last))
 
-#define DUE_16Bit(timerName)                        (__DUE_16Bit(timerName##_due, timerName##_last, timerName##_interval))
+#define DUE_16Bit(timerName, timerSkip)                        (__DUE_16Bit(timerName##_due, timerName##_last, timerName##_interval, timerSkip))
 
-uint16_t __DUE_16Bit(uint16_t &timer_due, uint16_t &timer_last, uint16_t timer_interval)
+uint16_t __DUE_16Bit(uint16_t &timer_due, uint16_t &timer_last, uint16_t timer_interval, boolean timerSkip)
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
@@ -124,8 +124,8 @@ Serial.printf("= timer[%6d] due[%6d] interval[%6d] (timer-due) [%10d] ((timer-du
                           ((int)((timer16Bit() - timer_due) / timer_interval)+1),
                           ((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval,
                           ((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval+timer_due);
-                          
-        timer_due  += ((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval;
+           
+        timer_due  += ((timerSkip==true) ? (((int)((timer16Bit() - timer_due) / timer_interval)+1)  * timer_interval):timer_interval);
 
   } 
   else return 0;

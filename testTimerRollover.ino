@@ -111,7 +111,7 @@ void setup() {
 void loop() {
   int p;
 
-  if ( DUE_16Bit(timerTest1) && 1 ) {
+  if ( DUE_16Bit(timerTest1, true) && 1 ) {
     if (timerTest1_last <= 0) timerTest1_last = timer16Bit();
     if ((int16_t)(timer16Bit() - timerTest1_last) < (DUE_TEST1 * 0.9))
     {
@@ -126,7 +126,7 @@ void loop() {
     }
   }
   
-  if ( DUE_16Bit(timerTest2) && 1 ) {
+  if ( DUE_16Bit(timerTest2, true) && 1 ) {
     //Serial.printf("[%5d] Test2 [%d]ms since last due\r\n", timerTest2_last
     //                                                     , SINCE_LAST_DUE_16Bit(timerTest2));
     if (timerTest2_last <= 0) timerTest2_last = timer16Bit();
@@ -143,7 +143,7 @@ void loop() {
     }
   }
 
-  if ( DUE_16Bit(timerTest3) && 1 ) {
+  if ( DUE_16Bit(timerTest3, true) && 1 ) {
     /*
     if (SINCE_LAST_DUE_16Bit(timerTest3) < (DUE_TEST3 * 0.9))
     {
