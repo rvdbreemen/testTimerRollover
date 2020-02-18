@@ -87,6 +87,6 @@ seconds.
 If you want to use the rollover-safe-timers in your program just copy `safeTimers.h` and
 include it at the beginning of your program.
 ```
-     #include "safeTimers,h"
+     #include "safeTimers.h"
 ```
 
