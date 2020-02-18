@@ -105,7 +105,6 @@ uint16_t timer16Bit()
 #define RESTART_16Bit_TIMER(timerName)              timerName##_due = timer16Bit()+timerName##_interval;
 
 #define TIME_LEFT_16Bit(timerName)                  ((int16_t)(timerName##_due-timer16Bit()))
-#define SINCE_LAST_DUE_16Bit(timerName)             ((int16_t)(timer16Bit()-timerName##_last))
 
 #define DUE_16Bit(timerName, timerSkip)                        (__DUE_16Bit(timerName##_due, timerName##_last, timerName##_interval, timerSkip))
 
@@ -113,10 +112,6 @@ uint16_t __DUE_16Bit(uint16_t &timer_due, uint16_t &timer_last, uint16_t timer_i
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
-//    while ((int16_t)(timer16Bit() - timer_due) >= 0) 
-//    {
-//      timer_due  += timer_interval;
-//    }
 
 Serial.printf("= timer[%6d] due[%6d] interval[%6d] (timer-due) [%10d] ((timer-due)/interval+1) [%10d] next[%10d] next_due[%10d] ==",
                           timer16Bit(), timer_due, timer_interval, 
