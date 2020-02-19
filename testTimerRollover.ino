@@ -15,24 +15,25 @@
  */
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
-#define DUE_TEST2       3000       // set 16Bit timer  3000ms
-#define DUE_TEST3       8000       // set 16Bit timer  8000ms
-#define DUE_TEST4      12000       // set 16Bit timer 12000ms
+#define DUE_TEST2       5000       // set 16Bit timer  3000ms
+#define DUE_TEST3       7000       // set 16Bit timer  8000ms
+#define DUE_TEST4      11000       // set 16Bit timer 12000ms
 
-#include "safeTimersFastRO.h" // uses 16Bit timer --> rollover in 1 minute and some seconds
+#include "safeTimersFastRO_rvdb.h" // uses 16Bit timer --> rollover in 1 minute and some seconds
                               // and micros() -> rollover in 1 hour and 10 minutes
 
+  
 
-  DECLARE_16BIT_TIMER(timerTestCatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTestSkip,    DUE_TEST2, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTestCatchUp, DUE_TEST1, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTestSkip,    DUE_TEST2, CONSTANT_TIME_BETWEEN_EVENTS)          // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CONSTANT_TIME_BETWEEN_EVENTS)            // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
 
-  DECLARE_TIMER_MS(wait4Sec,     4123,  CATCH_UP_MISSED_EVENTS)        // delay 4+ seconds
-  DECLARE_TIMER_SEC(delay41Secs,   41,  CATCH_UP_MISSED_EVENTS)        // every 41 seconds 
+  DECLARE_TIMER_MS(wait4Sec,     4123,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)        // delay 4+ seconds
+  DECLARE_TIMER_SEC(delay41Secs,   41,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)        // every 41 seconds 
 
-  DECLARE_TIMER_SEC(after100Secs, 100,  CATCH_UP_MISSED_EVENTS)
-  DECLARE_TIMER_SEC(hold15Secs,    15,  CATCH_UP_MISSED_EVENTS)
+  DECLARE_TIMER_SEC(after100Secs, 100,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)
+  DECLARE_TIMER_SEC(hold15Secs,    15,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)
 
 uint32_t  microsDetectRollover = micros();
 uint32_t  startTime            = 0;
@@ -97,7 +98,7 @@ void loop() {
     test1Counter++;
     print16BitTest(1, millis() - lastPrint);
     lastPrint = millis();
-    delay(random(500));
+    //delay(random(500));
   }
 
 //---TEST 2-------------------------------------------------------------------
@@ -114,7 +115,7 @@ void loop() {
     print16BitTest(2, millis() - lastPrint);
 
     lastPrint = millis();
-    delay(random(500));
+    //delay(random(500));
  }
   
   if ( DUE_16BIT(timerTest3) && 1 ) 
@@ -124,7 +125,7 @@ void loop() {
     print16BitTest(3, millis() - lastPrint);
     
     lastPrint = millis();
-    delay(random(500));
+    //delay(random(500));
   }
 
   if ( DUE_16BIT(timerTest4) && 1 )
@@ -134,7 +135,7 @@ void loop() {
     print16BitTest(4, millis() - lastPrint);
 
     lastPrint = millis();
-    delay(random(500));
+    //delay(random(500));
   }
 //============ End of 16 bit timers test's ===============================
   
@@ -164,7 +165,7 @@ void loop() {
       if ((p%10000) == 0) Serial.print("w");
       yield();
     }
-    delay(random(1000));
+    //delay(random(1000));
     Serial.println();
     Serial.printf("after100Secs: Time left [%3d]sec., [%7d]ms, [%2d]min.\r\n"
                                                             , TIME_LEFT_SEC(after100Secs)
@@ -192,7 +193,7 @@ void loop() {
                                                             , TIME_LEFT_SEC(delay41Secs)
                                                             , TIME_LEFT_MS(delay41Secs)
                                                             , TIME_LEFT_MIN(delay41Secs));
-    delay(random(1000));
+    //delay(random(1000));
     RESTART_TIMER(after100Secs);
   }
 
