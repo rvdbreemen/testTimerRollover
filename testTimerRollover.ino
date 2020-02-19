@@ -58,8 +58,6 @@ void print16BitTest(int testNr, uint16_t duration)
                                                            , spaceE
                                                            , testNr);
     
-  delay(random(500));
-
 } // print16BitTest()
 
 
@@ -96,12 +94,10 @@ void loop() {
   if ( DUE_16BIT(timerTestCatchUp) && 1 ) 
   {
     static uint32_t lastPrint = 0;
-    uint32_t        duration = millis() - lastPrint;
-
     test1Counter++;
-    print16BitTest(1, duration);
-
+    print16BitTest(1, millis() - lastPrint);
     lastPrint = millis();
+    delay(random(500));
   }
 
 //---TEST 2-------------------------------------------------------------------
@@ -113,32 +109,32 @@ void loop() {
   if ( DUE_16BIT(timerTestSkip) && 1 ) 
   {
     static uint32_t lastPrint = 0;
-    uint32_t        duration = millis() - lastPrint;
 
     test2Counter++;
-    print16BitTest(2, duration);
+    print16BitTest(2, millis() - lastPrint);
 
     lastPrint = millis();
-  }
+    delay(random(500));
+ }
   
   if ( DUE_16BIT(timerTest3) && 1 ) 
   {
     static uint32_t lastPrint = 0;
-    uint32_t        duration = millis() - lastPrint;
     
-    print16BitTest(3, duration);
+    print16BitTest(3, millis() - lastPrint);
     
     lastPrint = millis();
+    delay(random(500));
   }
 
   if ( DUE_16BIT(timerTest4) && 1 )
   {
     static uint32_t lastPrint = 0;
-    uint32_t        duration = millis() - lastPrint;
     
-    print16BitTest(4, duration);
+    print16BitTest(4, millis() - lastPrint);
 
     lastPrint = millis();
+    delay(random(500));
   }
 //============ End of 16 bit timers test's ===============================
   
