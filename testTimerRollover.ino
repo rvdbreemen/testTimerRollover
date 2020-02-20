@@ -30,10 +30,10 @@
 
   
 
-  DECLARE_16BIT_TIMER(timerTest1, DUE_TEST1, CONSTANT_INTERVAL_CATCH_UP_EVENTS)       // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest2,    DUE_TEST2, CONSTANT_INTERVAL_CATCH_UP_EVENTS)          // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CONSTANT_INTERVAL_CATCH_UP_EVENTS)            // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, CONSTANT_INTERVAL_CATCH_UP_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest1,       DUE_TEST1, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest2,       DUE_TEST2, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CONSTANT_INTERVAL_SKIP_TO_NEXT)     // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, CONSTANT_INTERVAL_CATCH_UP_EVENTS)  // print text every INTERVAL timer16Bit() ms
 
   DECLARE_TIMER_MS(wait4Sec,     4123,  CONSTANT_TIME_BETWEEN_EVENTS)        // delay 4+ seconds
   DECLARE_TIMER_SEC(delay41Secs,   41,  CONSTANT_TIME_BETWEEN_EVENTS)        // every 41 seconds 
