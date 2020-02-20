@@ -147,23 +147,23 @@ uint16_t timer16Bit()
   
 } // timer16Bit()
 
-#define DECLARE_16BIT_TIMER(timerName, timerTime, doSkip)  \
+#define DECLARE_16BIT_TIMER(timerName, timerTime, timerType)  \
                                             static uint16_t timerName##_interval = timerTime,         \
                                             timerName##_due  = timer16Bit()                           \
                                                                   +timerName##_interval               \
-                                                                  +random(timerName##_interval / 3);  \
-                                            static bool timerName##_skip = doSkip;
+                                                                +random(timerName##_interval / 10);   \
+                                            static byte timerName##_type = timerType;
 
-#define CHANGE_16BIT_INTERVAL(timerName, timerTime, doSkip) \
+#define CHANGE_16BIT_INTERVAL(timerName, timerTime, timerType) \
                                             timerName##_interval = timerTime                          \
                                             timerName##_due = micros()+timerName##_interval;          \
-                                            timerName##_skip = doSkip;
+                                            timerName##_type = timerType;
                                                     
 #define RESTART_16BIT_TIMER(timerName)      timerName##_due = timer16Bit()+timerName##_interval;
 
 #define TIME_LEFT_16BIT(timerName)          ((int16_t)(timerName##_due-timer16Bit()))
 
-#define DUE_16BIT(timerName)                (__DUE_16BIT(timerName##_due, timerName##_interval, timerName##_skip))
+#define DUE_16BIT(timerName)                (__DUE_16BIT(timerName##_due, timerName##_interval, timerName##_type))
 
 
 uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, byte timer_type)

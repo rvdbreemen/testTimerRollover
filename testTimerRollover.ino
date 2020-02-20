@@ -14,6 +14,12 @@
  * tab "safeTimers.h".
  */
 
+//#define CONSTANT_INTERVAL_CATCH_UP_EVENTS 0
+//#define CONSTANT_INTERVAL_SKIP_TO_NEXT 1
+//#define CONSTANT_TIME_BETWEEN_EVENTS 2
+
+
+
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       5000       // set 16Bit timer  3000ms
 #define DUE_TEST3       7000       // set 16Bit timer  8000ms
@@ -24,21 +30,25 @@
 
   
 
-  DECLARE_16BIT_TIMER(timerTestCatchUp, DUE_TEST1, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTestSkip,    DUE_TEST2, CONSTANT_TIME_BETWEEN_EVENTS)          // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CONSTANT_TIME_BETWEEN_EVENTS)            // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, CONSTANT_TIME_BETWEEN_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest1, DUE_TEST1, CONSTANT_INTERVAL_CATCH_UP_EVENTS)       // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest2,    DUE_TEST2, CONSTANT_INTERVAL_CATCH_UP_EVENTS)          // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest3,       DUE_TEST3, CONSTANT_INTERVAL_CATCH_UP_EVENTS)            // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest4,       DUE_TEST4, CONSTANT_INTERVAL_CATCH_UP_EVENTS)       // print text every INTERVAL timer16Bit() ms
 
-  DECLARE_TIMER_MS(wait4Sec,     4123,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)        // delay 4+ seconds
-  DECLARE_TIMER_SEC(delay41Secs,   41,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)        // every 41 seconds 
+  DECLARE_TIMER_MS(wait4Sec,     4123,  CONSTANT_TIME_BETWEEN_EVENTS)        // delay 4+ seconds
+  DECLARE_TIMER_SEC(delay41Secs,   41,  CONSTANT_TIME_BETWEEN_EVENTS)        // every 41 seconds 
 
-  DECLARE_TIMER_SEC(after100Secs, 100,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)
-  DECLARE_TIMER_SEC(hold15Secs,    15,  CONSTANT_INTERVAL_CATCH_UP_EVENTS)
+  DECLARE_TIMER_SEC(after100Secs, 100,  CONSTANT_TIME_BETWEEN_EVENTS)
+  DECLARE_TIMER_SEC(hold15Secs,    15,  CONSTANT_TIME_BETWEEN_EVENTS)
 
 uint32_t  microsDetectRollover = micros();
 uint32_t  startTime            = 0;
 uint32_t  test1Counter         = 0;
 uint32_t  test2Counter         = 0;
+uint32_t lastPrint1 = 0;
+uint32_t lastPrint2 = 0;
+uint32_t lastPrint3 = 0;
+uint32_t lastPrint4 = 0;
 
 //================================================================================================
 void print16BitTest(int testNr, uint16_t duration)
@@ -77,11 +87,22 @@ void setup() {
                                                 , ((millis() / 1000) % 60)
                                                 , (millis() % 1000));
   startTime = millis();
+  lastPrint1 = startTime;
+  lastPrint2 = startTime;
+  lastPrint3 = startTime;
+  lastPrint4 = startTime;
+  RESTART_TIMER(timerTest1);
+  RESTART_TIMER(timerTest2);
+  RESTART_TIMER(timerTest3);
+  RESTART_TIMER(timerTest4);
+  
   
 } // setup()
 
 
 //================================================================================================
+
+
 void loop() {
   int p;
 //============ Start 16 bit timers test's ================================
@@ -92,12 +113,12 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5.d6.d7<->d8<int>d9<int>d10 enz
 //
-  if ( DUE_16BIT(timerTestCatchUp) && 1 ) 
+  if ( DUE_16BIT(timerTest1) && 1 ) 
   {
-    static uint32_t lastPrint = 0;
+
     test1Counter++;
-    print16BitTest(1, millis() - lastPrint);
-    lastPrint = millis();
+    print16BitTest(1, millis() - lastPrint1);
+    lastPrint1 = millis();
     //delay(random(500));
   }
 
@@ -107,34 +128,31 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5<->d6<int>d7<int>d8<int>d9 enz
 //
-  if ( DUE_16BIT(timerTestSkip) && 1 ) 
+  if ( DUE_16BIT(timerTest2) && 1 ) 
   {
-    static uint32_t lastPrint = 0;
-
+    
     test2Counter++;
-    print16BitTest(2, millis() - lastPrint);
+    print16BitTest(2, millis() - lastPrint2);
 
-    lastPrint = millis();
+    lastPrint2 = millis();
     //delay(random(500));
  }
   
   if ( DUE_16BIT(timerTest3) && 1 ) 
   {
-    static uint32_t lastPrint = 0;
+   
+    print16BitTest(3, millis() - lastPrint3);
     
-    print16BitTest(3, millis() - lastPrint);
-    
-    lastPrint = millis();
+    lastPrint3 = millis();
     //delay(random(500));
   }
 
   if ( DUE_16BIT(timerTest4) && 1 )
   {
-    static uint32_t lastPrint = 0;
-    
-    print16BitTest(4, millis() - lastPrint);
+   
+    print16BitTest(4, millis() - lastPrint4);
 
-    lastPrint = millis();
+    lastPrint4 = millis();
     //delay(random(500));
   }
 //============ End of 16 bit timers test's ===============================
