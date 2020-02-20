@@ -176,7 +176,11 @@ uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, byte timer_ty
           timer_due  += timer_interval;
       break;
       case CONSTANT_INTERVAL_SKIP_TO_NEXT:
-          timer_due  = timer_due + (((uint16_t)(( timer_due-timer16Bit()) / timer_interval)+1)  * timer_interval);
+//          timer_due  = timer_due + (((uint16_t)(( timer_due-timer16Bit()) / timer_interval)+1)  * timer_interval);
+          while ((int16_t)(timer16Bit() - timer_due) >= 0) 
+          {
+            timer_due  += timer_interval;
+          }
       break;
       case CONSTANT_TIME_BETWEEN_EVENTS:
           timer_due = timer16Bit() + timer_interval;
