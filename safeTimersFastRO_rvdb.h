@@ -170,6 +170,7 @@ uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, byte timer_ty
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
+    Serial.printf("due [%5d] ", timer_due);
     switch(timer_type){
       case CONSTANT_INTERVAL_CATCH_UP_EVENTS:
           timer_due  += timer_interval;
@@ -181,7 +182,7 @@ uint16_t __DUE_16BIT(uint16_t &timer_due, uint16_t timer_interval, byte timer_ty
           timer_due = timer16Bit() + timer_interval;
       break;
     }
-    //Serial.printf("timer_due [%5d]", timer_due);
+    Serial.printf("next due [%5d] ==", timer_due);
   }
   else return 0;
   
