@@ -39,8 +39,8 @@
                               // and micros() -> rollover in 1 hour and 10 minutes
 
 
-  DECLARE_16BIT_TIMER(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
-  DECLARE_16BIT_TIMER(timerTest2_Skip,    DUE_TEST2, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest1, DUE_TEST1, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
+  DECLARE_16BIT_TIMER(timerTest2,    DUE_TEST2, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
   DECLARE_16BIT_TIMER(timerTest3,         DUE_TEST3, SKIP_MISSED_EVENTS)      // print text every INTERVAL timer16Bit() ms
   DECLARE_16BIT_TIMER(timerTest4,         DUE_TEST4, CATCH_UP_MISSED_EVENTS)  // print text every INTERVAL timer16Bit() ms
   
@@ -85,14 +85,14 @@ void printTimersLeftTime()
 {
   Serial.printf("[%5d] timerTest1: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
                                 , timer16Bit()
-                                , TIME_PAST_16BIT(timerTest1_CatchUp)
-                                , TIME_LEFT_16BIT(timerTest1_CatchUp)
-                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest1_CatchUp)) / 10) * 10 );
+                                , TIME_PAST_16BIT(timerTest1)
+                                , TIME_LEFT_16BIT(timerTest1)
+                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest1)) / 10) * 10 );
   Serial.printf("[%5d] timerTest2: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
                                 , timer16Bit()
-                                , TIME_PAST_16BIT(timerTest2_Skip)
-                                , TIME_LEFT_16BIT(timerTest2_Skip)
-                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest2_Skip)) / 10) * 10 );
+                                , TIME_PAST_16BIT(timerTest2)
+                                , TIME_LEFT_16BIT(timerTest2)
+                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest2)) / 10) * 10 );
   Serial.printf("[%5d] timerTest3: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
                                 , timer16Bit()
                                 , TIME_PAST_16BIT(timerTest3)
@@ -125,10 +125,7 @@ void setup() {
                                                 , ((millis() / 1000) % 60)
                                                 , (millis() % 1000));
   startTime = millis();
-  lastPrint1 = startTime;
-  lastPrint2 = startTime;
-  lastPrint3 = startTime;
-  lastPrint4 = startTime;
+
   RESTART_TIMER(timerTest1);
   RESTART_TIMER(timerTest2);
   RESTART_TIMER(timerTest3);
@@ -151,7 +148,7 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5.d6.d7<->d8<int>d9<int>d10 enz
 //
-  if ( DUE_16BIT(timerTest1_CatchUp) && 1 ) 
+  if ( DUE_16BIT(timerTest1) && 1 ) 
   {
     static uint32_t lastDue = 0;
     uint32_t        duration = millis() - lastDue;
@@ -168,14 +165,14 @@ void loop() {
 //                            <  bussy  >
 // d1<int>d2<int>d3<int>d4 ..............d5<->d6<int>d7<int>d8<int>d9 enz
 //
-  if ( DUE_16BIT(timerTest2_Skip) && 1 ) 
+  if ( DUE_16BIT(timerTest2) && 1 ) 
   {
     static uint32_t lastDue = 0;
     uint32_t        duration = millis() - lastDue;
     lastDue = millis();
 
     test2Counter++;
-    print16BitTest(2, millis() - lastPrint2);
+    print16BitTest(2,  duration);
 
   }
   

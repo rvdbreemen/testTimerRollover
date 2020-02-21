@@ -123,7 +123,11 @@ uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, byte timer_type)
       break;
       case CONSTANT_INTERVAL_SKIP_TO_NEXT:
           // this will calculate the next due, and skips passed due events (missing due events)
-          timer_due = timer_due + (((uint32_t)(( timer_due-micros()) / timer_interval)+1)  * timer_interval);
+          //timer_due +=  (((uint32_t)(( timer_due-micros()) / timer_interval)+1)  * timer_interval);
+          while ((int32_t)(micros() - timer_due) >= 0) 
+          {
+            timer_due  += timer_interval;
+          }
       break;
       case CONSTANT_TIME_BETWEEN_EVENTS:
           // this will reset the timer into now, and add the interval time

@@ -139,7 +139,7 @@ uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, uint8_t timerType
 
 uint16_t __TIME_LEFT__(uint16_t timer_due, uint16_t timer_interval)
 {
-  uint16 tmp;
+  uint16_t tmp;
   if ((timer_due - micros()) >= 0)
   {
     tmp = timer_due - micros();
@@ -219,7 +219,7 @@ uint16_t __DUE_16BIT__(uint16_t &timer_due, uint16_t timer_interval, byte timerT
 
 uint16_t __TIME_LEFT_16BIT__(uint16_t timer_due, uint16_t timer_interval)
 {
-  uint16 tmp;
+  uint16_t tmp;
   if ((timer_due - timer16Bit()) >= 0)
   {
     tmp = timer_due - timer16Bit();
