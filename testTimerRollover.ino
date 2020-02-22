@@ -31,7 +31,7 @@
 #define SHOW_COUNTERS
 
 //--- select tests to run  1,2,3,4,5,6,7,8,9,10
-bool      runTest[10] = {  2,2,2,1,2,3,4,1,2,3  };
+bool      runTest[10] = {  0,1,2,3,0,2,3,2,3,2  };
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       3000       // set 16Bit timer  3000ms
