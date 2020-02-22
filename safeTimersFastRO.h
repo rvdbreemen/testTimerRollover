@@ -30,7 +30,7 @@
  * <timerType> can either be:
  *   SKIP_MISSED_EVENTS
  *   CATCH_UP_MISSED_EVENTS
- *   CATCH_UP_SOME_MISSED_EVENTS 
+ *   SKIP_MISSED_EVENTS_WITH_SYNC 
  * 
  * TIME_LEFT_MIN(timerName)
  *  returns the time left in minutes
@@ -79,10 +79,10 @@
 */
 
 //--- timerType's -----------------------
-#define SKIP_MISSED_EVENTS              0
-#define CATCH_UP_MISSED_EVENTS          1
-#define CATCH_UP_SOME_MISSED_EVENTS     2
-#define WAIT_FOR_NEXT_DUE               3
+#define SKIP_MISSED_EVENTS                0
+#define CATCH_UP_MISSED_EVENTS            1
+#define SKIP_MISSED_EVENTS_WITH_SYNC      2
+#define SKIP_TO_NEXT_EVENT                3
 
 
 #define DECLARE_TIMER_MIN(timerName, ...) \
@@ -130,7 +130,7 @@
 
 #define CHANGE_INTERVAL CHANGE_INTERVAL_MS
 
-#define TIME_LEFT(timerName)          ( __TIME_LEFT__(timerName##_due, timerName##_interval) / 1000 ) 
+#define TIME_LEFT(timerName)          ( __TimeLeft__(timerName##_due) / 1000 ) 
 #define TIME_LEFT_MS(timerName)       ( (TIME_LEFT(timerName) )  )
 #define TIME_LEFT_SEC(timerName)      ( (TIME_LEFT(timerName) ) / 1000 )
 #define TIME_LEFT_MIN(timerName)      ( (TIME_LEFT(timerName) ) / (60 * 1000))
@@ -142,69 +142,87 @@
 
 #define RESTART_TIMER(timerName)      ( timerName##_due = micros()+timerName##_interval ); 
 
-#define DUE(timerName)                ( __DUE__(timerName##_due, timerName##_interval, timerName##_type) )
+#define DUE(timerName)                ( __Due__(timerName##_due, timerName##_interval, timerName##_type) )
 
 
-boolean __DUE__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
+uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
 {
   if ((int32_t)(micros() - timer_due) >= 0) 
   {
     switch (timerType) {
         case CATCH_UP_MISSED_EVENTS:   
                   timer_due += timer_interval;
-                  return true;  
                   break;
-        case CATCH_UP_SOME_MISSED_EVENTS:
+        case SKIP_MISSED_EVENTS_WITH_SYNC:
                   // this will calculate the next due, and skips passed due events 
-                  // (missing due events)and fires due!
+                  // (missing due events)
                   // timer_due +=  (((uint32_t)(( timer_due - micros()) / timer_interval)+1) *timer_interval);
                   while ((int32_t)(micros() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
-                  return true;  
                   break;
-        case WAIT_FOR_NEXT_DUE:
+        case SKIP_TO_NEXT_EVENT:
                   // this will calculate the next due, and skips passed due events 
                   // and does NOT fire the due!
                   while ((int32_t)(micros() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
-                  return false;  
+                  return 0;  
                   break;
         // SKIP_MISSED_EVENTS is default
         default:  timer_due = micros() + timer_interval;
-                  return true;  
                   break;
     }
-    
+    return timer_due;  
   }
   
-  return false;
+  return 0;
   
-} // __DUE__()
+} // __Due__()
 
 
-uint32_t __TIME_LEFT__(uint32_t timer_due, uint32_t timer_interval)
+uint32_t __TimeLeft__(uint32_t timer_due)
 {
-  uint32_t  tmp;
-  if ((timer_due - micros()) >= 0)
-  {
-    tmp = timer_due - micros();
-  }
-  else
-  {
-    tmp = ((timer_due+ UINT32_MAX) - micros());
+  uint32_t tmp;
+  byte state = 0;
+
+  // timeline 0---------------------------SIGNED-MAX-----------------------UMAX
+  // state=0  0----------------------------T--+--D-------------------------UMAX
+  // state=0  0----------------------------d--+--t-------------------------UMAX
+  // state=0  0-------------------------------+-------------T-------D------UMAX
+  // state=0  0-------------------------------+-------------d--t-----------UMAX
+  // state=0  0-------T-D---------------------+----------------------------UMAX
+  // state=0  0---------d--t------------------+----------------------------UMAX
+    
+  // state=1  0---T---------------------------+---------------------D------UMAX
+  if (timer_due > INT32_MAX && micros() < INT32_MAX)  state = 1;  // timer() rolled-over
+  
+  // state=2  0---D---------------------------+-------------------------T--UMAX
+  if (timer_due < INT32_MAX && micros() > INT32_MAX)  state = 2;  // timer_due rolled-over
+
+  switch(state) {
+      case 0:     if ( (int32_t)(timer_due - micros()) >= 0 )
+                        tmp = timer_due - micros();
+                  else  tmp = 0;
+                  break;
+                  //--- micros() rolled-over -------------------------------
+      case 1:     if ( (int32_t)((timer_due + UINT32_MAX) - micros()) >= 0 )
+                        tmp = (timer_due + UINT32_MAX) - micros();
+                  else  tmp = 0;
+                  break;
+                  //--- timer_due rolled-over ------------------------------
+      case 2:     if ( (int32_t)(timer_due - (micros() + UINT32_MAX)) >= 0 )
+                        tmp = timer_due - (micros() + UINT32_MAX);
+                  else  tmp = 0;
+                  break;
+      default:    tmp = 0;
   }
 
-  if (tmp >= timer_interval)
-  {
-    tmp = (tmp % timer_interval);
-  }
   return tmp;
   
-} // __TIME_LEFT__()
+} // __TimeLeft__()
 
 // process variadic from macro's
 uint32_t getParam(int i, ...) 
@@ -246,77 +264,96 @@ uint16_t timer16Bit()
                                                     
 #define RESTART_TIMER_16BIT(timerName)  timerName##_due = timer16Bit()+timerName##_interval;
 
-#define TIME_LEFT_16BIT(timerName)      ( __TIME_LEFT_16BIT__(timerName##_due, timerName##_interval) ) 
+#define TIME_LEFT_16BIT(timerName)      ( __TimeLeft16Bit__(timerName##_due) ) 
 #define TIME_LEFT_SEC_16BIT(timerName)  ( (TIME_LEFT_16BIT(timerName) / 1000) )
 
 #define TIME_PAST_16BIT(timerName)      ( (timerName##_interval - TIME_LEFT_16BIT(timerName)) )
 #define TIME_PAST_SEC_16BIT(timerName)  ( (TIME_PAST_16BIT(timerName) / 1000) )
 
-#define DUE_16BIT(timerName)            ( __DUE_16BIT__(timerName##_due               \
+#define DUE_16BIT(timerName)            ( __Due16Bit__(timerName##_due               \
                                                          , timerName##_interval       \
                                                          , timerName##_type) )
 
 
-boolean __DUE_16BIT__(uint16_t &timer_due, uint16_t timer_interval, byte timerType)
+uint16_t __Due16Bit__(uint16_t &timer_due, uint16_t timer_interval, byte timerType)
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
     switch (timerType) {
         case CATCH_UP_MISSED_EVENTS:   
                   timer_due += timer_interval;
-                  return false; 
                   break;
-        case CATCH_UP_SOME_MISSED_EVENTS:
+        case SKIP_MISSED_EVENTS_WITH_SYNC:
                   // this will calculate the next due, and skips passed due 
-                  // events (missing due events) and fires due!
+                  // events (missing due events)
                   // timer_due +=  (((uint32_t)(( timer_due - micros()) / timer_interval)+1) *timer_interval);
                   while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
-                  return true; 
                   break;
-        case WAIT_FOR_NEXT_DUE:
+        case SKIP_TO_NEXT_EVENT:
                   // this will calculate the next due, and skips passed due events 
                   // and does NOT fire the due!
                   while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
-                  return false;  
+                  return 0;  
                   break;
         // SKIP_MISSED_EVENTS is default
         default:  timer_due = timer16Bit() + timer_interval;
-                  return true;  
                   break;
     } // switch()
+    
+    return timer_due;  
   }
   
-  return false;
+  return 0;
 
-} // __DUE_16BIT__()
+} // __Due16Bit__()
 
 
-uint16_t __TIME_LEFT_16BIT__(uint16_t timer_due, uint16_t timer_interval)
+uint16_t __TimeLeft16Bit__(uint16_t timer_due)
 {
   uint16_t tmp;
-  if ((timer_due - timer16Bit()) >= 0)
-  {
-    tmp = timer_due - timer16Bit();
-  }
-  else
-  {
-    tmp = ((timer_due+ UINT16_MAX) - timer16Bit());
+  byte state = 0;
+
+  // timeline 0---------------------------SIGNED-MAX-----------------------UMAX
+  // state=0  0----------------------------T--+--D-------------------------UMAX
+  // state=0  0----------------------------d--+--t-------------------------UMAX
+  // state=0  0-------------------------------+-------------T-------D------UMAX
+  // state=0  0-------------------------------+-------------d--t-----------UMAX
+  // state=0  0-------T-D---------------------+----------------------------UMAX
+  // state=0  0---------d--t------------------+----------------------------UMAX
+    
+  // state=1  0---T---------------------------+---------------------D------UMAX
+  if (timer_due > INT16_MAX && timer16Bit() < INT16_MAX)  state = 1;  // timer() rolled-over
+  
+  // state=2  0---D---------------------------+-------------------------T--UMAX
+  if (timer_due < INT16_MAX && timer16Bit() > INT16_MAX)  state = 2;  // timer_due rolled-over
+
+  switch(state) {
+      case 0:     if ( (int16_t)(timer_due - timer16Bit()) >= 0 )
+                        tmp = timer_due - timer16Bit();
+                  else  tmp = 0;
+                  break;
+      case 1:     //--- timer16Bit() rolled-over
+                  if ( (int16_t)((timer_due + UINT16_MAX) - timer16Bit()) >= 0 )
+                        tmp = (timer_due + UINT16_MAX) - timer16Bit();
+                  else  tmp = 0;
+                  break;
+      case 2:     //--- timer_due rolled-over
+                  if ( (int16_t)(timer_due - (timer16Bit() + UINT16_MAX)) >= 0 )
+                        tmp = timer_due - (timer16Bit() + UINT16_MAX);
+                  else  tmp = 0;
+                  break;
+      default:    tmp = 0;
   }
 
-  if (tmp >= timer_interval)
-  {
-    tmp = (tmp % timer_interval);
-  }
   return tmp;
   
-} // __TIME_LEFT_16BIT__()
-
+} // __TimeLeft16Bit__()
 
 
 /***************************************************************************
