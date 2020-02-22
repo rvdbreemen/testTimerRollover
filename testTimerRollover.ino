@@ -31,7 +31,7 @@
 #define SHOW_COUNTERS
 
 //--- select tests to run  1,2,3,4,5,6,7,8,9,10
-bool      runTest[10] = {  3,2,1,0,1,2,3,0,1,3  };
+bool      runTest[10] = {  1,1,1,0,1,0,0,0,0,0  };
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       3000       // set 16Bit timer  3000ms
@@ -59,7 +59,7 @@ bool      runTest[10] = {  3,2,1,0,1,2,3,0,1,3  };
   //--- print text every INTERVAL timer16Bit() ms
   DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)
   DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_EVENTS_WITH_SYNC)
-  DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3)
+  DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3, SKIP_TO_NEXT_EVENT)
   DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
   DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, CATCH_UP_MISSED_EVENTS)
   
@@ -77,33 +77,33 @@ bool      bRandomDelays         = false;
 //================================================================================================
 void printTimerTypes()
 {
-  Serial.println(F("---TEST 1------CATCH_UP_MISSED_EVENTS---------------------------------------------"));
-  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-  Serial.println(F(" |             |    <   processor   >      |"));
-  Serial.println(F(" |             |    <     bussy     >      |"));
-  Serial.println(F(" d1<int>d2<int>d3....................d4.d5.d6<int>d7<int>d8<int>d9<int>d10 enz"));
-  Serial.println(F("                                     d4>d5>d6 < less then interval, then sync"));
-  Serial.println(F("                                           d6 --> d7 (etc) == interval  "));   
-  Serial.println(); 
-
-  Serial.println(F("---TEST 2------SKIP_MISSED_EVENTS_WITH_SYNC--------------------------------------"));
-  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-  Serial.println(F(" |             |    <   processor   >             |"));
-  Serial.println(F(" |             |    <     bussy     >             |"));
-  Serial.println(F(" d1<int>d2<int>d3....................d5<->>d6<int>d7<int>d8<int>d9 enz"));
-  Serial.println(F("                      t4     t5     t6 missed"));
-  Serial.println(F("                                     d5 -> d6 < less then interval, then sync"));
-  Serial.println(F("                                           d6 --> d7 (etc) == interval    "));
-  Serial.println(); 
-
-  Serial.println(F("---TEST 3------SKIP_MISSED_EVENTS------------------------------------------------"));
-  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-  Serial.println(F(" |             |    <   processor   >  "));
-  Serial.println(F(" |             |    <     bussy     >  "));
-  Serial.println(F(" d1<int>d2<int>d3....................d5<int>d6<int>d7<int>d8<int>d9 enz"));
-  Serial.println(F("                      t4     t5     t6 missed"));
-  Serial.println(F("                                     d5 --> d6 (etc) == interval"));
-  Serial.println(); 
+//  Serial.println(F("---TEST 1------CATCH_UP_MISSED_EVENTS---------------------------------------------"));
+//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+//  Serial.println(F(" |             |    <   processor   >      |"));
+//  Serial.println(F(" |             |    <     bussy     >      |"));
+//  Serial.println(F(" d1<int>d2<int>d3....................d4.d5.d6<int>d7<int>d8<int>d9<int>d10 enz"));
+//  Serial.println(F("                                     d4>d5>d6 < less then interval, then sync"));
+//  Serial.println(F("                                           d6 --> d7 (etc) == interval  "));   
+//  Serial.println(); 
+//
+//  Serial.println(F("---TEST 2------SKIP_MISSED_EVENTS_WITH_SYNC--------------------------------------"));
+//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+//  Serial.println(F(" |             |    <   processor   >             |"));
+//  Serial.println(F(" |             |    <     bussy     >             |"));
+//  Serial.println(F(" d1<int>d2<int>d3....................d5<->>d6<int>d7<int>d8<int>d9 enz"));
+//  Serial.println(F("                      t4     t5     t6 missed"));
+//  Serial.println(F("                                     d5 -> d6 < less then interval, then sync"));
+//  Serial.println(F("                                           d6 --> d7 (etc) == interval    "));
+//  Serial.println(); 
+//
+//  Serial.println(F("---TEST 3------SKIP_MISSED_EVENTS------------------------------------------------"));
+//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+//  Serial.println(F(" |             |    <   processor   >  "));
+//  Serial.println(F(" |             |    <     bussy     >  "));
+//  Serial.println(F(" d1<int>d2<int>d3....................d5<int>d6<int>d7<int>d8<int>d9 enz"));
+//  Serial.println(F("                      t4     t5     t6 missed"));
+//  Serial.println(F("                                     d5 --> d6 (etc) == interval"));
+//  Serial.println(); 
 
 } // printTimerTypes()
 
