@@ -31,7 +31,7 @@
 #define SHOW_COUNTERS
 
 //--- select tests to run  1,2,3,4,5,6,7,8,9,10
-bool      runTest[10] = {  1,1,1,0,1,0,0,0,0,0  };
+bool      runTest[10] = {  1,1,1,1,1,0,0,0,0,0  };
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       3000       // set 16Bit timer  3000ms
@@ -57,11 +57,18 @@ bool      runTest[10] = {  1,1,1,0,1,0,0,0,0,0  };
 #endif
 
   //--- print text every INTERVAL timer16Bit() ms
-  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)
-  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_EVENTS_WITH_SYNC)
+
+  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, SKIP_TO_NEXT_EVENT)
+  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_TO_NEXT_EVENT)
   DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3, SKIP_TO_NEXT_EVENT)
   DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
-  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, CATCH_UP_MISSED_EVENTS)
+  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, SKIP_TO_NEXT_EVENT)
+
+//  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)
+//  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_EVENTS_WITH_SYNC)
+//  DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3, SKIP_TO_NEXT_EVENT)
+//  DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
+//  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, CATCH_UP_MISSED_EVENTS)
   
   DECLARE_TIMER_SEC(startWaiting,  41)        // every 41 seconds 
   DECLARE_TIMER_SEC(startHolding, 130)
