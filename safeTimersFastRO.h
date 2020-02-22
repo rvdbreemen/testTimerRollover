@@ -82,6 +82,7 @@
 #define SKIP_MISSED_EVENTS              0
 #define CATCH_UP_MISSED_EVENTS          1
 #define CATCH_UP_SOME_MISSED_EVENTS     2
+#define WAIT_FOR_NEXT_DUE               3
 
 
 #define DECLARE_TIMER_MIN(timerName, ...) \
@@ -144,31 +145,43 @@
 #define DUE(timerName)                ( __DUE__(timerName##_due, timerName##_interval, timerName##_type) )
 
 
-uint32_t __DUE__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
+boolean __DUE__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
 {
   if ((int32_t)(micros() - timer_due) >= 0) 
   {
     switch (timerType) {
         case CATCH_UP_MISSED_EVENTS:   
                   timer_due += timer_interval;
+                  return true;  
                   break;
         case CATCH_UP_SOME_MISSED_EVENTS:
                   // this will calculate the next due, and skips passed due events 
-                  // (missing due events)
+                  // (missing due events)and fires due!
                   // timer_due +=  (((uint32_t)(( timer_due - micros()) / timer_interval)+1) *timer_interval);
                   while ((int32_t)(micros() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
+                  return true;  
+                  break;
+        case WAIT_FOR_NEXT_DUE:
+                  // this will calculate the next due, and skips passed due events 
+                  // and does NOT fire the due!
+                  while ((int32_t)(micros() - timer_due) >= 0) 
+                  {
+                    timer_due  += timer_interval;
+                  }
+                  return false;  
                   break;
         // SKIP_MISSED_EVENTS is default
         default:  timer_due = micros() + timer_interval;
+                  return true;  
                   break;
     }
-    return timer_due;  
+    
   }
   
-  return 0;
+  return false;
   
 } // __DUE__()
 
@@ -244,32 +257,42 @@ uint16_t timer16Bit()
                                                          , timerName##_type) )
 
 
-uint16_t __DUE_16BIT__(uint16_t &timer_due, uint16_t timer_interval, byte timerType)
+boolean __DUE_16BIT__(uint16_t &timer_due, uint16_t timer_interval, byte timerType)
 {
   if ((int16_t)(timer16Bit() - timer_due) >= 0) 
   {
     switch (timerType) {
         case CATCH_UP_MISSED_EVENTS:   
                   timer_due += timer_interval;
+                  return false; 
                   break;
         case CATCH_UP_SOME_MISSED_EVENTS:
                   // this will calculate the next due, and skips passed due 
-                  // events (missing due events)
+                  // events (missing due events) and fires due!
                   // timer_due +=  (((uint32_t)(( timer_due - micros()) / timer_interval)+1) *timer_interval);
                   while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                   {
                     timer_due  += timer_interval;
                   }
+                  return true; 
+                  break;
+        case WAIT_FOR_NEXT_DUE:
+                  // this will calculate the next due, and skips passed due events 
+                  // and does NOT fire the due!
+                  while ((int16_t)(timer16Bit() - timer_due) >= 0) 
+                  {
+                    timer_due  += timer_interval;
+                  }
+                  return false;  
                   break;
         // SKIP_MISSED_EVENTS is default
         default:  timer_due = timer16Bit() + timer_interval;
+                  return true;  
                   break;
     } // switch()
-    
-    return timer_due;  
   }
   
-  return 0;
+  return false;
 
 } // __DUE_16BIT__()
 
