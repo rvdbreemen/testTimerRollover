@@ -25,18 +25,20 @@
  */
  
 //--- define USE_SAFETIMERS_H to include the real (production) safeTimers.h file
-// #define USE_SAFETIMERS_H
+//   #define USE_SAFETIMERS_H
 
 //--- define SHOW_COUNTERS to print the testCounters at every wait
 #define SHOW_COUNTERS
+#define DO_SHORT_DELAY  1 // {0|1}  => startWaiting timer
+#define DO_LONG_DELAY   1 // {0|1}  => startHolding timer
 
-//--- select tests to run  1,2,3,4,5,6,7,8,9,10
-bool      runTest[10] = {  1,1,1,1,1,0,0,0,0,0  };
+//--- select tests to run  1,2,3,4,5,6,7,8,9,10 
+bool      runTest[10] = {  1,1,1,0,0,0,0,0,0,0  };  // => 1=run, 0=skip
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       3000       // set 16Bit timer  3000ms
 #define DUE_TEST3       3000       // set 16Bit timer  3000ms
-#define DUE_TEST4       8000       // set 16Bit timer  8000ms
+#define DUE_TEST4       7000       // set 16Bit timer  7000ms
 #define DUE_TEST5      12000       // set 16Bit timer 12000ms
 
 #ifdef USE_SAFETIMERS_H
@@ -57,21 +59,16 @@ bool      runTest[10] = {  1,1,1,1,1,0,0,0,0,0  };
 #endif
 
   //--- print text every INTERVAL timer16Bit() ms
-
-  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, SKIP_TO_NEXT_EVENT)
-  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_TO_NEXT_EVENT)
-  DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3, SKIP_TO_NEXT_EVENT)
+  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_TICKS)
+  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_TICKS_WITH_SYNC)
+  //DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3)
+  DECLARE_TIMER_16BIT(timerTest3_Sync,    DUE_TEST3, TIMER_TYPE_4)
   DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
-  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, SKIP_TO_NEXT_EVENT)
-
-//  DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_EVENTS)
-//  DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_EVENTS_WITH_SYNC)
-//  DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3, SKIP_TO_NEXT_EVENT)
-//  DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
-//  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, CATCH_UP_MISSED_EVENTS)
+  DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, SKIP_MISSED_TICKS)
   
   DECLARE_TIMER_SEC(startWaiting,  41)        // every 41 seconds 
   DECLARE_TIMER_SEC(startHolding, 130)
+  DECLARE_TIMER(debug1Sec, 5000);
 
 uint32_t  detect32BitRollover   = micros();
 uint32_t  detect16BitRollover   = timer16Bit();
@@ -79,38 +76,53 @@ uint32_t  startTime             = 0;
 uint32_t  test1Counter          = 0;
 uint32_t  test2Counter          = 0;
 uint32_t  test3Counter          = 0;
+uint32_t  test4Counter          = 0;
+uint32_t  test5Counter          = 0;
 bool      bRandomDelays         = false;
 
 //================================================================================================
 void printTimerTypes()
 {
-//  Serial.println(F("---TEST 1------CATCH_UP_MISSED_EVENTS---------------------------------------------"));
-//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-//  Serial.println(F(" |             |    <   processor   >      |"));
-//  Serial.println(F(" |             |    <     bussy     >      |"));
-//  Serial.println(F(" d1<int>d2<int>d3....................d4.d5.d6<int>d7<int>d8<int>d9<int>d10 enz"));
-//  Serial.println(F("                                     d4>d5>d6 < less then interval, then sync"));
-//  Serial.println(F("                                           d6 --> d7 (etc) == interval  "));   
-//  Serial.println(); 
-//
-//  Serial.println(F("---TEST 2------SKIP_MISSED_EVENTS_WITH_SYNC--------------------------------------"));
-//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-//  Serial.println(F(" |             |    <   processor   >             |"));
-//  Serial.println(F(" |             |    <     bussy     >             |"));
-//  Serial.println(F(" d1<int>d2<int>d3....................d5<->>d6<int>d7<int>d8<int>d9 enz"));
-//  Serial.println(F("                      t4     t5     t6 missed"));
-//  Serial.println(F("                                     d5 -> d6 < less then interval, then sync"));
-//  Serial.println(F("                                           d6 --> d7 (etc) == interval    "));
-//  Serial.println(); 
-//
-//  Serial.println(F("---TEST 3------SKIP_MISSED_EVENTS------------------------------------------------"));
-//  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
-//  Serial.println(F(" |             |    <   processor   >  "));
-//  Serial.println(F(" |             |    <     bussy     >  "));
-//  Serial.println(F(" d1<int>d2<int>d3....................d5<int>d6<int>d7<int>d8<int>d9 enz"));
-//  Serial.println(F("                      t4     t5     t6 missed"));
-//  Serial.println(F("                                     d5 --> d6 (etc) == interval"));
-//  Serial.println(); 
+  Serial.println(F("---TYPE 0------CATCH_UP_MISSED_TICKS---------------------------------------------"));
+  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+  Serial.println(F(" |             |     <   processor   >            |      |"));
+  Serial.println(F(" |             |     <     bussy     >            |      |"));
+  Serial.println(F(" d1<int>d2<int>d3<...................>d4.d5.d6.d7.d8<int>d9<int>d10 enz"));
+  Serial.println(F("                            d3 --> d4 == longer then interval"));
+  Serial.println(F("                            d4>d5>d6>d7<.>d8 < less then interval, then sync to time-ticks"));
+  Serial.println(F("                            d8 --> d9 (etc) == interval  "));   
+  Serial.println(); 
+
+  Serial.println(F("---TYPE 1------SKIP_MISSED_TICKS_WITH_SYNC--------------------------------------"));
+  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+  Serial.println(F(" |             |     <   processor   >     |      |"));
+  Serial.println(F(" |             |     <     bussy     >     |      |"));
+  Serial.println(F(" d1<int>d2<int>d3<...................>d4<.>d5<int>d6<int>d7<int>d8 enz"));
+  Serial.println(F("                      t4     t5     t6 missed"));
+  Serial.println(F("                            d3 --> d4 == longer then interval"));
+  Serial.println(F("                            d4 -> d5 < less then interval, then sync to time-ticks"));
+  Serial.println(F("                            d5 --> d6 (etc) == interval    "));
+  Serial.println(); 
+
+  Serial.println(F("---TYPE 2------SKIP_MISSED_TICKS------------------------------------------------"));
+  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+  Serial.println(F(" |             |     <   processor    >           \\      \\"));
+  Serial.println(F(" |             |     <     bussy      >             \\      \\"));
+  Serial.println(F(" d1<int>d2<int>d3<....................>d4<int>d5<int>d6<int>d7<int>d8 enz"));
+  Serial.println(F("                      t4     t5     t6 missed"));
+  Serial.println(F("                            d3 --> d4 == longer then interval"));
+  Serial.println(F("                            d4 --> d5 (etc) == interval (shifted from time-ticks)"));
+  Serial.println(); 
+
+  Serial.println(F("---TYPE 3------TIMER_TYPE_4------------------------------------------------------"));
+  Serial.println(F(" t1     t2     t3     t4     t5     t6     t7     t8     t9     t10    t11    t12"));
+  Serial.println(F(" |             |     <   processor    >    |      |"));
+  Serial.println(F(" |             |     <     bussy      >    |      |"));
+  Serial.println(F(" d1<int>d2<int>d3<........................>d4<int>d5<int>d6<int>d7 enz"));
+  Serial.println(F("                      t4     t5     t6 missed"));
+  Serial.println(F("                            d3 --> d4 == longer then interval"));
+  Serial.println(F("                            d4 --> d5 (etc) == interval (always on time-ticks!)"));
+  Serial.println(); 
 
 } // printTimerTypes()
 
@@ -128,8 +140,6 @@ void printTestData(int testNr, uint32_t duration, uint32_t next_due)
     if ((testNr-1) == n) b = a;
     if (runTest[n]) a++;
   }
-  //Serial.printf("testNr[%d], position[%d] => spaceB[%d], spaceA[%d]\r\n", testNr, b, (b*10), (((a-1)* 10)-(b*10)) );
-  //Serial.flush();
   strncpy( spaceB, spaces, (b*10) );
   strncpy( spaceA, spaces, (((a-1)* 10)-(b*10)) );
   if (runTest[(testNr-1)]) 
@@ -152,6 +162,28 @@ void printTestData(int testNr, uint32_t duration, uint32_t next_due)
 
 
 //================================================================================================
+void printCounter(byte tNr, uint32_t counter, uint32_t interval)
+{
+  if (runTest[(tNr-1)])
+  {
+    Serial.printf("[%5d] test%d counted[%d] times run in [%d] events" 
+                                                            , timer16Bit()
+                                                            , tNr
+                                                            , counter
+                                                            , ((millis() - startTime) / interval));
+    if (counter ==  ((millis() - startTime) / interval))
+      Serial.println(" --> EQUAL");
+    else 
+    {
+      int16_t error = (int16_t)(((millis() - startTime) / interval) - counter);
+      Serial.printf(" --> ? (%d off)\r\n", error);
+    }
+  }
+  
+} // printCounter()
+
+
+//================================================================================================
 void printTimersLeftTime()
 {
   if (runTest[0]) {
@@ -164,16 +196,16 @@ void printTimersLeftTime()
   if (runTest[1]) {
     Serial.printf("[%5d] timerTest2: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
                                 , timer16Bit()
-                                , (uint32_t)TIME_PAST_16BIT(timerTest2_Cnst)
-                                , (uint32_t)TIME_LEFT_16BIT(timerTest2_Cnst)
+                                , TIME_PAST_16BIT(timerTest2_Cnst)
+                                , TIME_LEFT_16BIT(timerTest2_Cnst)
                                 , ((timer16Bit() + TIME_LEFT_16BIT(timerTest2_Cnst)) / 10) * 10 );
   }
   if (runTest[2]) {
     Serial.printf("[%5d] timerTest3: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
                                 , timer16Bit()
-                                , TIME_PAST_16BIT(timerTest3_Skip)
-                                , TIME_LEFT_16BIT(timerTest3_Skip)
-                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest3_Skip)) / 10) * 10 );
+                                , TIME_PAST_16BIT(timerTest3_Sync)
+                                , TIME_LEFT_16BIT(timerTest3_Sync)
+                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest3_Sync)) / 10) * 10 );
   }
   if (runTest[3]) {
     Serial.printf("[%5d] timerTest4: Time past/left [%5d/%5d]ms  next due after [%5d]!\r\n"
@@ -239,7 +271,7 @@ void setup() {
                   break;
         case 1:   Serial.printf("testType2[%d]       ", timerTest2_Cnst_type);
                   break;
-        case 2:   Serial.printf("testType3[%d]       ", timerTest3_Skip_type);
+        case 2:   Serial.printf("testType3[%d]       ", timerTest3_Sync_type);
                   break;
         case 3:   Serial.printf("testType4[%d]       ", timerTest4_type);
                   break;
@@ -257,7 +289,7 @@ void setup() {
   //--- ok, this is only to sequence the timers ----------
   timerTest1_CatchUp_due  = timer16Bit() + DUE_TEST1;
   timerTest2_Cnst_due     = timerTest1_CatchUp_due +  500;
-  timerTest3_Skip_due     = timerTest1_CatchUp_due + 1000;
+  timerTest3_Sync_due     = timerTest1_CatchUp_due + 1000;
 
   Serial.printf("[%5d] StartTime[%02d:%02d:%03d]\r\n" , millis()
                                                 , ((millis() / (60 * 1000)) % 60)
@@ -273,7 +305,17 @@ void loop() {
 
 //============ Start 16 bit timers test's ==================================
 
-//
+  if (DUE(debug1Sec) )
+  {
+  if (runTest[4]) {
+    Serial.printf("[%5d] timerTest5: Time past/left [%5d/%5d]ms next due after [%5d]!\r\n"
+                                , timer16Bit()
+                                , TIME_PAST_16BIT(timerTest5)
+                                , TIME_LEFT_16BIT(timerTest5)
+                                , ((timer16Bit() + TIME_LEFT_16BIT(timerTest5)) / 10) * 10 );
+    }
+  }
+  
   if ( DUE_16BIT(timerTest1_CatchUp) && runTest[0] ) 
   {
     static uint32_t lastDue = 0;
@@ -295,14 +337,14 @@ void loop() {
     printTestData(2, duration, timerTest2_Cnst_due);
   }
   
-  if ( DUE_16BIT(timerTest3_Skip) && runTest[2] ) 
+  if ( DUE_16BIT(timerTest3_Sync) && runTest[2] ) 
   {
     static uint32_t lastDue = 0;
     uint32_t        duration = millis() - lastDue;
     lastDue = millis();
     
     test3Counter++;
-    printTestData(3, duration, timerTest3_Skip_due);
+    printTestData(3, duration, timerTest3_Sync_due);
   }
   
   if ( DUE_16BIT(timerTest4) && runTest[3] ) 
@@ -311,6 +353,7 @@ void loop() {
     uint32_t        duration = millis() - lastDue;
     lastDue = millis();
     
+    test4Counter++;
     printTestData(4, duration, timerTest4_due);
     
   }
@@ -321,57 +364,74 @@ void loop() {
     uint32_t        duration = millis() - lastDue;
     lastDue = millis();
     
+    test5Counter++;
     printTestData(5, duration, timerTest5_due);
 
   }
 //============ End of 16 bit timers test's ===============================
   
   //--- see what happens if the processor is occupied and can not handle timers (every 41 seconds)
-  if ( DUE(startWaiting) && 1)
+  if ( DUE(startWaiting) && DO_SHORT_DELAY)
   {
     Serial.println();
 #ifdef SHOW_COUNTERS
     {
-      Serial.printf("[%5d] test1 counted[%d] times run in [%d] events" 
+      printCounter(1, test1Counter, DUE_TEST1);
+      printCounter(2, test2Counter, DUE_TEST2);
+      printCounter(3, test3Counter, DUE_TEST3);
+      printCounter(4, test4Counter, DUE_TEST4);
+      printCounter(5, test5Counter, DUE_TEST5);
+      /**
+      if (runTest[0])
+      {
+        Serial.printf("[%5d] test1 counted[%d] times run in [%d] events" 
                                                             , timer16Bit()
                                                             , test1Counter
                                                             , ((millis() - startTime) / DUE_TEST1));
-      if (test1Counter ==  ((millis() - startTime) / DUE_TEST1))
+        if (test1Counter ==  ((millis() - startTime) / DUE_TEST1))
           Serial.println(" --> EQUAL");
-      else 
-      {
-        int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST1) - test1Counter);
-        Serial.printf(" --> ? (%d off)\r\n", error);
+        else 
+        {
+          int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST1) - test1Counter);
+          Serial.printf(" --> ? (%d off)\r\n", error);
+        }
       }
-      Serial.printf("[%5d] test2 counted[%d] times run in [%d] events" 
+      if (runTest[1])
+      {
+        Serial.printf("[%5d] test2 counted[%d] times run in [%d] events" 
                                                             , timer16Bit()
                                                             , test2Counter
                                                             , ((millis() - startTime) / DUE_TEST2));
-      if (test2Counter ==  ((millis() - startTime) / DUE_TEST1))
+        if (test2Counter ==  ((millis() - startTime) / DUE_TEST2))
           Serial.println(" --> EQUAL");
-      else 
-      {
-        int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST2) - test2Counter);
-        Serial.printf(" --> ? (%d off)\r\n", error);
+        else 
+        {
+          int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST2) - test2Counter);
+          Serial.printf(" --> ? (%d off)\r\n", error);
+        }
       }
-      Serial.printf("[%5d] test3 counted[%d] times run in [%d] events" 
+      if (runTest[2])
+      {
+        Serial.printf("[%5d] test3 counted[%d] times run in [%d] events" 
                                                             , timer16Bit()
                                                             , test3Counter
                                                             , ((millis() - startTime) / DUE_TEST3));
-      if (test3Counter ==  ((millis() - startTime) / DUE_TEST1))
+        if (test3Counter ==  ((millis() - startTime) / DUE_TEST3))
           Serial.println(" --> EQUAL");
-      else 
-      {
-        int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST3) - test3Counter);
-        Serial.printf(" --> ? (%d off)\r\n", error);
+        else 
+        {
+          int16_t error = (int16_t)(((millis() - startTime) / DUE_TEST3) - test3Counter);
+          Serial.printf(" --> ? (%d off)\r\n", error);
+        }
       }
+    **/
     }
 #endif
 
     Serial.println();
     printTimersLeftTime();
     //--- be bussy for 4 seconds. This influances mainly Test1 & 2 & 3
-    Serial.printf("\r\n[%5d] wait ... ", timer16Bit());
+    Serial.printf("[%5d] wait ... ", timer16Bit());
 
     for(byte cc=0; cc<40; cc++)
     {
@@ -395,8 +455,9 @@ void loop() {
   }
 
   //-- every x seconds do the stress test for all the timers --
-  if (DUE(startHolding) && 1)  
+  if (DUE(startHolding) && DO_LONG_DELAY)  
   {
+    Serial.println();
     printTimersLeftTime();
 
     //--- test what happens if something keeps the system bussy for 15 seconds ---
@@ -446,6 +507,6 @@ void loop() {
   }
   detect32BitRollover = micros();
 
-  if (bRandomDelays)  delay(random(500));
+  if (bRandomDelays)  delay(random(250));
 
 } // loop()
