@@ -172,7 +172,7 @@ uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
                   }
                   else
                   {  
-                      while ((int32_t)(micros() - timer_due) >= 0) 
+                      if ((int32_t)(micros() - timer_due) >= 0) 
                       {
                         timer_due  += timer_interval; 
                       }
@@ -295,39 +295,40 @@ uint16_t __Due16Bit__(uint16_t &timer_due, uint16_t timer_interval, byte timerTy
                   }
                   break;
         case TIMER_TYPE_4:
-                  Serial.printf("(timer()[%d] - _due [%d]) - interval [%d] >= int[%d] uint[%d] "
-                                          , timer16Bit()
-                                          , timer_due
-                                          , timer_interval
-                                          , (int16_t)(timer16Bit() - timer_due - timer_interval)
-                                          , (uint16_t)(timer16Bit() - timer_due - timer_interval)
-                                          );
+//                  Serial.printf("(timer()[%d] - _due [%d]) - interval [%d] >= int[%d] uint[%d] "
+//                                          , timer16Bit()
+//                                          , timer_due
+//                                          , timer_interval
+//                                          , (int16_t)(timer16Bit() - timer_due - timer_interval)
+//                                          , (uint16_t)(timer16Bit() - timer_due - timer_interval)
+//                                          );
                   if ((int16_t)(timer16Bit() - timer_due - timer_interval) >= 0) 
                   {
-                  Serial.printf("(timer()[%d] - _due [%d]) - interval [%d] >= int[%d] uint[%d] "
-                                          , timer16Bit()
-                                          , timer_due
-                                          , timer_interval
-                                          , (int16_t)(timer16Bit() - timer_due - timer_interval)
-                                          , (uint16_t)(timer16Bit() - timer_due - timer_interval)
-                                          );
+//                  Serial.printf("(timer()[%d] - _due [%d]) - interval [%d] >= int[%d] uint[%d] "
+//                                          , timer16Bit()
+//                                          , timer_due
+//                                          , timer_interval
+//                                          , (int16_t)(timer16Bit() - timer_due - timer_interval)
+//                                          , (uint16_t)(timer16Bit() - timer_due - timer_interval)
+//                                          );
                     while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                       {
                         timer_due  += timer_interval;
-                        Serial.printf("=>YES next due [%d]" , timer_due);
+//                        Serial.printf("=>YES next due [%d]" , timer_due);
+                          Serial.print(".");
                       }
                     Serial.println();  
                     return 0;
                   }
                   else
                   {  
-                      while ((int16_t)(timer16Bit() - timer_due) >= 0) 
+                      if ((int16_t)(timer16Bit() - timer_due) >= 0) 
                       {
                         timer_due  += timer_interval;
-                        Serial.printf("=>NO next due [%d]" , timer_due); 
+//                        Serial.printf("=>NO next due [%d]" , timer_due); 
                       }
                   } 
-                  Serial.println();
+//                  Serial.println();
                   break;
         // SKIP_MISSED_TICKS is default
         default:  timer_due = timer16Bit() + timer_interval;
