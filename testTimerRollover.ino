@@ -70,6 +70,7 @@ bool      runTest[10] = {  1,1,1,0,0,0,0,0,0,0  };  // => 1=run, 0=skip
   DECLARE_TIMER_SEC(startHolding, 130)
   DECLARE_TIMER(debug1Sec, 5000);
 
+
 uint32_t  detect32BitRollover   = micros();
 uint32_t  detect16BitRollover   = timer16Bit();
 uint32_t  startTime             = 0;
@@ -320,11 +321,14 @@ void loop() {
   {
     static uint32_t lastDue = 0;
     uint32_t        duration = millis() - lastDue;
+    lastDue = millis();
 
     test1Counter++;
     printTestData(1, duration, timerTest1_CatchUp_due);
-
-    lastDue = millis();
+//    Serial.printf("[%5d] Time[%02d:%02d:%03d]\r\n" , millis()-startTime
+//                                                , ((millis()-startTime / (60 * 1000)) % 60)
+//                                                , ((millis()-startTime / 1000) % 60)
+//                                                , (millis()-startTime % 1000));
   }
 
   if ( DUE_16BIT(timerTest2_Cnst) && runTest[1] ) 
@@ -335,6 +339,10 @@ void loop() {
 
     test2Counter++;
     printTestData(2, duration, timerTest2_Cnst_due);
+//    Serial.printf("[%5d] Time[%02d:%02d:%03d]\r\n" , millis()-startTime
+//                                                , ((millis()-startTime / (60 * 1000)) % 60)
+//                                                , ((millis()-startTime / 1000) % 60)
+//                                                , (millis()-startTime % 1000));
   }
   
   if ( DUE_16BIT(timerTest3_Sync) && runTest[2] ) 
@@ -345,6 +353,10 @@ void loop() {
     
     test3Counter++;
     printTestData(3, duration, timerTest3_Sync_due);
+//    Serial.printf("[%5d] Time[%02d:%02d:%03d]\r\n" , millis()-startTime
+//                                                , ((millis()-startTime / (60 * 1000)) % 60)
+//                                                , ((millis()-startTime / 1000) % 60)
+//                                                , (millis()-startTime % 1000));
   }
   
   if ( DUE_16BIT(timerTest4) && runTest[3] ) 
@@ -356,6 +368,10 @@ void loop() {
     test4Counter++;
     printTestData(4, duration, timerTest4_due);
     
+//     Serial.printf("[%5d] Time[%02d:%02d:%03d]\r\n" , millis()-startTime
+//                                                , ((millis()-startTime / (60 * 1000)) % 60)
+//                                                , ((millis()-startTime / 1000) % 60)
+//                                                , (millis()-startTime % 1000));
   }
 
   if ( DUE_16BIT(timerTest5) && runTest[4] )
@@ -367,6 +383,10 @@ void loop() {
     test5Counter++;
     printTestData(5, duration, timerTest5_due);
 
+//    Serial.printf("[%5d] Time[%02d:%02d:%03d]\r\n" , millis()-startTime
+//                                                , ((millis()-startTime / (60 * 1000)) % 60)
+//                                                , ((millis()-startTime / 1000) % 60)
+//                                                , (millis()-startTime % 1000));
   }
 //============ End of 16 bit timers test's ===============================
   
