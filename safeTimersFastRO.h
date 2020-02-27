@@ -170,7 +170,7 @@ uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, uint32_t &timer_l
                   }
                   break;
         case TIMER_TYPE_4:
-                  if ((int32_t)(micros() - timer_last - timer_interval) > 0) 
+                  if ((int32_t)(micros() - timer_last - timer_interval) >= 0) 
                   {
                     while ((int32_t)(micros() - timer_due) >= 0) 
                       {
@@ -312,7 +312,7 @@ uint16_t __Due16Bit__(uint16_t &timer_due, uint16_t timer_interval, uint16_t &ti
                   break;
         case TIMER_TYPE_4:
                   //This is the one...
-                  if ((int16_t)(timer16Bit() - timer_last - timer_interval) > 0) 
+                  if ((int16_t)(timer16Bit() - timer_last - timer_interval) >= 0) 
                   {
                     while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                       {
