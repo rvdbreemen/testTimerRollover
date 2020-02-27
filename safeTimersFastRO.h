@@ -83,6 +83,7 @@
 #define CATCH_UP_MISSED_TICKS          1
 #define SKIP_MISSED_TICKS_WITH_SYNC    2
 #define TIMER_TYPE_4                   3
+   
 
 
 #define DECLARE_TIMER_MIN(timerName, ...) \
@@ -173,20 +174,22 @@ uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, uint32_t &timer_l
                   {
                     while ((int32_t)(micros() - timer_due) >= 0) 
                       {
+                        timer_last = timer_due;
                         timer_due  += timer_interval;
+                        yield();
                       }  
                     
-                    timer_last = micros();
+                    
                     return 0;
                   }
                   else
                   {  
                       if ((int32_t)(micros() - timer_due) >= 0) 
                       {
+                        timer_last = timer_due;
                         timer_due  += timer_interval; 
                       }
                   }
-                  timer_last = micros();
                   break;
         // SKIP_MISSED_TICKS is default
         default:  timer_due = micros() + timer_interval;
@@ -313,24 +316,25 @@ uint16_t __Due16Bit__(uint16_t &timer_due, uint16_t timer_interval, uint16_t &ti
                   {
                     while ((int16_t)(timer16Bit() - timer_due) >= 0) 
                       {
+                        timer_last = timer16Bit();
                         timer_due  += timer_interval;
 //                        Serial.printf("=>YES next due [%d]" , timer_due);
-                          Serial.print(".");
+//                          Serial.print(".");
+                          yield();
                       }
-                    Serial.println();
-                    timer_last = timer16Bit();
+//                    Serial.println();
                     return 0;
                   }
                   else
                   {  
                       if ((int16_t)(timer16Bit() - timer_due) >= 0) 
                       {
+                        timer_last = timer16Bit();
                         timer_due  += timer_interval;
-//                        Serial.printf("=>NO next due [%d]" , timer_due); 
+//                      Serial.printf("=>NO next due [%d]" , timer_due); 
                       }
                   } 
 //                  Serial.println();
-                  timer_last = timer16Bit();
                   break;
         // SKIP_MISSED_TICKS is default
         default:  timer_due = timer16Bit() + timer_interval;

@@ -1,4 +1,4 @@
-/*
+ /*
  * Author:  Willem Aandewiel
  * Thanks to Erik and Edgar Bonet
  * 
@@ -33,12 +33,12 @@
 #define DO_LONG_DELAY   1 // {0|1}  => startHolding timer
 
 //--- select tests to run  1,2,3,4,5,6,7,8,9,10 
-bool      runTest[10] = {  1,1,1,0,0,0,0,0,0,0  };  // => 1=run, 0=skip
+bool      runTest[10] = {  1,1,1,1,0,0,0,0,0,0  };  // => 1=run, 0=skip
 
 #define DUE_TEST1       3000       // set 16Bit timer  3000ms
 #define DUE_TEST2       3000       // set 16Bit timer  3000ms
 #define DUE_TEST3       3000       // set 16Bit timer  3000ms
-#define DUE_TEST4       7000       // set 16Bit timer  7000ms
+#define DUE_TEST4       3000       // set 16Bit timer  7000ms
 #define DUE_TEST5      12000       // set 16Bit timer 12000ms
 
 #ifdef USE_SAFETIMERS_H
@@ -61,9 +61,9 @@ bool      runTest[10] = {  1,1,1,0,0,0,0,0,0,0  };  // => 1=run, 0=skip
   //--- print text every INTERVAL timer16Bit() ms
   DECLARE_TIMER_16BIT(timerTest1_CatchUp, DUE_TEST1, CATCH_UP_MISSED_TICKS)
   DECLARE_TIMER_16BIT(timerTest2_Cnst,    DUE_TEST2, SKIP_MISSED_TICKS_WITH_SYNC)
-  //DECLARE_TIMER_16BIT(timerTest3_Skip,    DUE_TEST3)
-  DECLARE_TIMER_16BIT(timerTest3_Sync,    DUE_TEST3, TIMER_TYPE_4)
-  DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
+  DECLARE_TIMER_16BIT(timerTest3_Sync,    DUE_TEST3, SKIP_MISSED_TICKS)
+  DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4, TIMER_TYPE_4)
+//  DECLARE_TIMER_16BIT(timerTest4,         DUE_TEST4)
   DECLARE_TIMER_16BIT(timerTest5,         DUE_TEST5, SKIP_MISSED_TICKS)
   
   DECLARE_TIMER_SEC(startWaiting,  41)        // every 41 seconds 
